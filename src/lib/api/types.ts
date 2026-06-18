@@ -21,6 +21,14 @@ export interface NeighborhoodResponse {
   category: string | null;
   geometry: GeoJsonGeometry | null;
   details: Record<string, unknown> | null;
+  socialSafetyScore: number | null;
+  theftSafetyScore: number | null;
+  quietScore: number | null;
+  greenScore: number | null;
+  accessibilityScore: number | null;
+  hospitalityScore: number | null;
+  dailyShoppingScore: number | null;
+  leefbaarometerScore: number | null;
 }
 
 export interface CitiesApiResponse {

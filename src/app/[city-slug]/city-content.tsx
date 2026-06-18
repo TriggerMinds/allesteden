@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, MapPin, Users } from "lucide-react";
@@ -101,7 +101,7 @@ export default function CityContent({
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
               <div className="text-center">
                 <p className="text-5xl font-bold text-emerald-600">
                   {formatScore(selectedNeighborhood.score)}
@@ -109,38 +109,86 @@ export default function CityContent({
                 <p className="text-sm text-zinc-500 mt-1">Score</p>
               </div>
 
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {[
+                  { label: "Sociale veiligheid", value: selectedNeighborhood.socialSafetyScore, color: "text-orange-600", bg: "bg-orange-50" },
+                  { label: "Inbraak & diefstal", value: selectedNeighborhood.theftSafetyScore, color: "text-red-600", bg: "bg-red-50" },
+                  { label: "Rust & overlast", value: selectedNeighborhood.quietScore, color: "text-sky-600", bg: "bg-sky-50" },
+                  { label: "Groen in de wijk", value: selectedNeighborhood.greenScore, color: "text-emerald-600", bg: "bg-emerald-50" },
+                  { label: "Bereikbaarheid", value: selectedNeighborhood.accessibilityScore, color: "text-violet-600", bg: "bg-violet-50" },
+                  { label: "Horeca", value: selectedNeighborhood.hospitalityScore, color: "text-amber-600", bg: "bg-amber-50" },
+                  { label: "Dagelijkse boodschappen", value: selectedNeighborhood.dailyShoppingScore, color: "text-lime-600", bg: "bg-lime-50" },
+                  { label: "Leefbaarometer", value: selectedNeighborhood.leefbaarometerScore, color: "text-teal-600", bg: "bg-teal-50" },
+                ].map(({ label, value, color, bg }) => (
+                  <div key={label} className={`${bg} rounded-lg p-3 text-center`}>
+                    <p className={`text-lg font-bold ${color}`}>{formatScore(value)}</p>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{label}</p>
+                  </div>
+                ))}
+              </div>
+
               {selectedNeighborhood.population !== null && (
-                <div className="flex items-center justify-between rounded-xl bg-zinc-50 p-4">
-                  <span className="flex items-center gap-2 text-sm text-zinc-500">
+                <div className="flex items-center justify-between rounded-xl bg-zinc-50 p-3 text-sm">
+                  <span className="flex items-center gap-2 text-zinc-500">
                     <Users className="size-4" />
                     Inwoners
                   </span>
-                  <span className="text-lg font-semibold text-zinc-900">
+                  <span className="font-semibold text-zinc-900">
                     {formatPopulation(selectedNeighborhood.population)}
                   </span>
                 </div>
               )}
 
-              {selectedNeighborhood.details && (
-                <div className="space-y-2 text-sm text-zinc-500">
-                  {Object.entries(selectedNeighborhood.details)
-                    .filter(
-                      ([k]) =>
-                        k !== "aantalinwoners" &&
-                        k !== "population" &&
-                        k !== "wijknaam",
-                    )
-                    .slice(0, 8)
-                    .map(([key, val]) => (
-                      <div key={key} className="flex justify-between gap-4">
-                        <span className="truncate">{key}</span>
-                        <span className="font-medium text-zinc-700 text-right">
-                          {typeof val === "number" ? formatPopulation(val) : String(val)}
-                        </span>
+              {(() => {
+                const d = selectedNeighborhood.details;
+                if (!d) return null;
+                const pct = (v: unknown) => typeof v === "number" ? v + "%" : null;
+                type RowEl = React.JSX.Element | null;
+                const Row = ({ l, v }: { l: string | null; v: string | null }) => v != null ? (
+                  <div className="flex justify-between text-xs py-0.5">
+                    <span className="text-zinc-500">{l}</span>
+                    <span className="font-medium text-zinc-700">{v}</span>
+                  </div>
+                ) : null;
+
+                const sections: { title: string; rows: RowEl[] }[] = [];
+
+                const b1 = [Row({ l: "Tot 2000", v: pct(d.percentage_bouwjaarklasse_tot_2000) }), Row({ l: "2000+", v: pct(d.percentage_bouwjaarklasse_vanaf_2000) })].filter(Boolean);
+                if (b1.length) sections.push({ title: "Bouwjaren", rows: b1 });
+
+                const b2 = [Row({ l: "Eengezinswoning", v: pct(d.percentage_eengezinswoning) }), Row({ l: "Meergezinswoning", v: pct(d.percentage_meergezinswoning) }), Row({ l: "Koopwoning", v: pct(d.percentage_koopwoningen) }), Row({ l: "Huurwoning", v: pct(d.percentage_huurwoningen) })].filter(Boolean);
+                if (b2.length) sections.push({ title: "Type woningen", rows: b2 });
+
+                const b3 = [Row({ l: "Alleenstaand", v: pct(d.percentage_eenpersoonshuishoudens) }), Row({ l: "Met kinderen", v: pct(d.percentage_huishoudens_met_kinderen) }), Row({ l: "Zonder kinderen", v: pct(d.percentage_huishoudens_zonder_kinderen) })].filter(Boolean);
+                if (b3.length) sections.push({ title: "Huishoudens", rows: b3 });
+
+                const b4 = [Row({ l: "0-14 jaar", v: pct(d.percentage_personen_0_tot_15_jaar) }), Row({ l: "15-24 jaar", v: pct(d.percentage_personen_15_tot_25_jaar) }), Row({ l: "25-44 jaar", v: pct(d.percentage_personen_25_tot_45_jaar) }), Row({ l: "45-64 jaar", v: pct(d.percentage_personen_45_tot_65_jaar) }), Row({ l: "65+", v: pct(d.percentage_personen_65_jaar_en_ouder) })].filter(Boolean);
+                if (b4.length) sections.push({ title: "Leeftijden", rows: b4 });
+
+                const b5 = [Row({ l: "Nederland", v: pct(d.percentage_met_herkomstland_nederland) }), Row({ l: "Europa excl. NL", v: pct(d.percentage_met_herkomstland_uit_europa_excl_nl) }), Row({ l: "Buiten Europa", v: pct(d.percentage_met_herkomstland_buiten_europa) })].filter(Boolean);
+                if (b5.length) sections.push({ title: "Herkomst inwoners", rows: b5 });
+
+                const codes: RowEl[] = [];
+                if (d.wijkcode) codes.push(Row({ l: "Wijkcode", v: String(d.wijkcode) }));
+                if (d.buurtcode) codes.push(Row({ l: "Buurtcode", v: String(d.buurtcode) }));
+
+                return (
+                  <>
+                    {sections.map((s) => (
+                      <div key={s.title}>
+                        <h4 className="text-xs font-semibold text-zinc-700 mb-1">{s.title}</h4>
+                        <div className="rounded-lg bg-zinc-50 px-3 py-2">{s.rows}</div>
                       </div>
                     ))}
-                </div>
-              )}
+                    {codes.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-zinc-700 mb-1">Gebiedscodes</h4>
+                        <div className="rounded-lg bg-zinc-50 px-3 py-2">{codes}</div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </>
         ) : (

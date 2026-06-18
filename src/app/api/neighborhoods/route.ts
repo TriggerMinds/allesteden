@@ -158,6 +158,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     greenScore: row.green_score,
     quietScore: row.quiet_score,
     safetyScore: row.safety_score,
+    accessibilityScore: row.accessibility_score,
+    hospitalityScore: row.hospitality_score,
+    dailyShoppingScore: row.daily_shopping_score,
+    leefbaarometerScore: row.leefbaarometer_score,
     details: row.details_json,
     geometry: parseGeometry(row.geometry),
     wijknaam:
@@ -183,6 +187,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     category: computeCategory(n.score),
     geometry: n.geometry,
     details: n.details,
+    socialSafetyScore: n.socialSafetyScore,
+    theftSafetyScore: n.theftSafetyScore,
+    quietScore: n.quietScore,
+    greenScore: n.greenScore,
+    accessibilityScore: n.accessibilityScore,
+    hospitalityScore: n.hospitalityScore,
+    dailyShoppingScore: n.dailyShoppingScore,
+    leefbaarometerScore: n.leefbaarometerScore,
   }));
 
   const response: NeighborhoodsApiResponse = {
