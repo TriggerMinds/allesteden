@@ -1,17 +1,20 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { useMemo, useCallback, useEffect, useRef } from "react";
+import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
+import L from "leaflet";
 import type { NeighborhoodResponse, GeoJsonGeometry } from "@/lib/api/types";
-import type { PathOptions, GeoJSON as LeafletGeoJSON } from "leaflet";
 
-type SortKey = "name" | "safetyScore" | "greenScore" | "quietScore";
+type SortKey = "name" | "safetyScore" | "greenScore" | "quietScore" | "weighted";
 
 interface CityMapProps {
   neighborhoods: NeighborhoodResponse[];
   selectedMetric: SortKey;
   hoveredId: number | null;
+  selectedId: number | null;
+  weightedScores: Record<number, number>;
   onHover: (id: number | null) => void;
+  onSelect: (id: number | null) => void;
 }
 
 function getColor(score: number | null): string {
@@ -23,7 +26,10 @@ function getColor(score: number | null): string {
   return "#dc2626";
 }
 
-function buildFeatureCollection(neighborhoods: NeighborhoodResponse[]) {
+function buildFeatureCollection(
+  neighborhoods: NeighborhoodResponse[],
+  weightedScores: Record<number, number>,
+) {
   return {
     type: "FeatureCollection" as const,
     features: neighborhoods
@@ -36,74 +42,123 @@ function buildFeatureCollection(neighborhoods: NeighborhoodResponse[]) {
           safetyScore: n.safetyScore,
           greenScore: n.greenScore,
           quietScore: n.quietScore,
+          weightedScore: weightedScores[n.id] ?? null,
         },
         geometry: n.geometry as GeoJsonGeometry,
       })),
   };
 }
 
+function MapController({
+  geoJsonData,
+  selectedId,
+  neighborhoods,
+}: {
+  geoJsonData: ReturnType<typeof buildFeatureCollection>;
+  selectedId: number | null;
+  neighborhoods: NeighborhoodResponse[];
+}) {
+  const map = useMap();
+  const hasFitted = useRef(false);
+
+  useEffect(() => {
+    if (neighborhoods.length === 0 || hasFitted.current) return;
+    const geoLayer = L.geoJSON(geoJsonData as unknown as GeoJSON.GeoJSON);
+    if (geoLayer.getLayers().length > 0) {
+      map.fitBounds(geoLayer.getBounds(), { padding: [40, 40] });
+      hasFitted.current = true;
+    }
+  }, [neighborhoods, geoJsonData, map]);
+
+  useEffect(() => {
+    if (selectedId === null) return;
+    const feature = geoJsonData.features.find(
+      (f) => f.properties.id === selectedId,
+    );
+    if (!feature) return;
+    const geoLayer = L.geoJSON(feature as unknown as GeoJSON.GeoJSON);
+    if (geoLayer.getLayers().length > 0) {
+      map.flyToBounds(geoLayer.getBounds(), {
+        padding: [60, 60],
+        maxZoom: 15,
+        duration: 0.8,
+      });
+    }
+  }, [selectedId, geoJsonData, map]);
+
+  return null;
+}
+
 export default function CityMap({
   neighborhoods,
   selectedMetric,
   hoveredId,
+  selectedId,
+  weightedScores,
   onHover,
+  onSelect,
 }: CityMapProps) {
   const geoJsonData = useMemo(
-    () => buildFeatureCollection(neighborhoods),
-    [neighborhoods],
+    () => buildFeatureCollection(neighborhoods, weightedScores),
+    [neighborhoods, weightedScores],
   );
 
   const getStyle = useCallback(
-    (feature: unknown): PathOptions => {
+    (feature: unknown): L.PathOptions => {
       const props = (feature as Record<string, unknown>)?.properties as Record<string, unknown> | undefined;
       const id = (props?.id as number) ?? -1;
-      const score = (props?.[selectedMetric] as number | null) ?? null;
+      const rawScore =
+        selectedMetric === "weighted"
+          ? (props?.weightedScore as number | null)
+          : (props?.[selectedMetric] as number | null);
+      const score = rawScore ?? null;
 
-      if (id === hoveredId) {
+      const isSelected = id === selectedId;
+      const isHovered = id === hoveredId;
+
+      if (isSelected) {
+        return {
+          fillColor: getColor(score),
+          weight: 4,
+          opacity: 1,
+          color: "#000000",
+          fillOpacity: 0.95,
+          dashArray: "6 3",
+        };
+      }
+      if (isHovered) {
         return {
           fillColor: getColor(score),
           weight: 3.5,
           opacity: 1,
           color: "#000000",
-          fillOpacity: 0.95,
+          fillOpacity: 0.9,
         };
       }
-
       return {
         fillColor: getColor(score),
-        weight: 1.5,
+        weight: 1.2,
         opacity: 1,
-        color: "#374151",
-        fillOpacity: 0.7,
+        color: "#9ca3af",
+        fillOpacity: 0.65,
       };
     },
-    [selectedMetric, hoveredId],
+    [selectedMetric, hoveredId, selectedId],
   );
 
   const onEachFeature = useCallback(
     (feature: unknown, layer: unknown) => {
       const props = (feature as Record<string, unknown>)?.properties as Record<string, unknown> | undefined;
       const id = (props?.id as number) ?? -1;
-      const name = (props?.name as string) ?? "Onbekend";
-      const safety = props?.safetyScore as number | null;
-      const green = props?.greenScore as number | null;
-      const quiet = props?.quietScore as number | null;
 
-      const l = layer as LeafletGeoJSON;
-      l.bindPopup(
-        `<div class="text-sm font-sans">
-          <strong class="text-base">${name}</strong><br/>
-          🛡️ Veiligheid: ${safety?.toFixed(1) ?? "—"}<br/>
-          🌿 Groen: ${green?.toFixed(1) ?? "—"}<br/>
-          🤫 Rust: ${quiet?.toFixed(1) ?? "—"}
-        </div>`,
-      );
+      const l = layer as L.GeoJSON;
       l.on({
         mouseover: () => onHover(id),
         mouseout: () => onHover(null),
+        click: () => onSelect(id === selectedId ? null : id),
       });
     },
-    [onHover],
+    [onHover, onSelect, selectedId],
   );
 
   return (
@@ -115,14 +170,19 @@ export default function CityMap({
       zoomControl={true}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
       <GeoJSON
-        key={selectedMetric}
+        key={`${selectedMetric}-${JSON.stringify(weightedScores)}`}
         data={geoJsonData}
         style={getStyle}
         onEachFeature={onEachFeature}
+      />
+      <MapController
+        geoJsonData={geoJsonData}
+        selectedId={selectedId}
+        neighborhoods={neighborhoods}
       />
     </MapContainer>
   );
