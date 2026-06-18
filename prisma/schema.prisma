@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model City {
+  id            Int             @id @default(autoincrement())
+  name          String
+  slug          String          @unique
+  neighborhoods Neighborhood[]
+
+  @@index([slug])
+}
+
+model Neighborhood {
+  id          Int      @id @default(autoincrement())
+  cityId      Int
+  name        String
+  slug        String
+  geometry    Unsupported("geometry(Geometry,4326)")
+  safetyScore Float?   @map("safety_score")
+  greenScore  Float?   @map("green_score")
+  quietScore  Float?   @map("quiet_score")
+  detailsJson Json?    @map("details_json")
+  city        City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([cityId, slug])
+  @@index([cityId])
+  @@index([slug])
+  @@map("neighborhoods")
+}
