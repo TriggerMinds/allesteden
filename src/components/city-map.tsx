@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import type { NeighborhoodResponse, GeoJsonGeometry } from "@/lib/api/types";
+import type { PathOptions, GeoJSON as LeafletGeoJSON } from "leaflet";
 
 type SortKey = "name" | "safetyScore" | "greenScore" | "quietScore";
 
 interface CityMapProps {
   neighborhoods: NeighborhoodResponse[];
   selectedMetric: SortKey;
-  cityName: string;
+  hoveredId: number | null;
+  onHover: (id: number | null) => void;
 }
 
 function getColor(score: number | null): string {
@@ -29,6 +31,7 @@ function buildFeatureCollection(neighborhoods: NeighborhoodResponse[]) {
       .map((n) => ({
         type: "Feature" as const,
         properties: {
+          id: n.id,
           name: n.name,
           safetyScore: n.safetyScore,
           greenScore: n.greenScore,
@@ -42,69 +45,85 @@ function buildFeatureCollection(neighborhoods: NeighborhoodResponse[]) {
 export default function CityMap({
   neighborhoods,
   selectedMetric,
+  hoveredId,
+  onHover,
 }: CityMapProps) {
   const geoJsonData = useMemo(
     () => buildFeatureCollection(neighborhoods),
     [neighborhoods],
   );
 
-  return (
-    <div className="h-[400px] w-full rounded-xl overflow-hidden border border-zinc-200 shadow-sm">
-      <MapContainer
-        center={[52.1326, 5.2913]}
-        zoom={10}
-        className="h-full w-full"
-        scrollWheelZoom={true}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <GeoJSON
-          key={selectedMetric}
-          data={geoJsonData}
-          style={(feature) => {
-            const p = feature?.properties as Record<string, unknown> | undefined;
-            const score = p
-              ? (p[selectedMetric] as number | null) ?? null
-              : null;
-            return {
-              fillColor: getColor(score),
-              weight: 1.5,
-              opacity: 1,
-              color: "#374151",
-              fillOpacity: 0.7,
-            };
-          }}
-          onEachFeature={(feature, layer) => {
-            const p = feature.properties as Record<string, unknown>;
-            const name = (p.name as string) ?? "Onbekend";
-            const safety = p.safetyScore as number | null;
-            const green = p.greenScore as number | null;
-            const quiet = p.quietScore as number | null;
+  const getStyle = useCallback(
+    (feature: unknown): PathOptions => {
+      const props = (feature as Record<string, unknown>)?.properties as Record<string, unknown> | undefined;
+      const id = (props?.id as number) ?? -1;
+      const score = (props?.[selectedMetric] as number | null) ?? null;
 
-            layer.bindPopup(
-              `<div class="text-sm font-sans">
-                <strong class="text-base">${name}</strong><br/>
-                🛡️ Veiligheid: ${safety?.toFixed(1) ?? "—"}<br/>
-                🌿 Groen: ${green?.toFixed(1) ?? "—"}<br/>
-                🤫 Rust: ${quiet?.toFixed(1) ?? "—"}
-              </div>`,
-            );
-            layer.on({
-              mouseover: (e) => {
-                const l = e.target;
-                l.setStyle({ weight: 3, color: "#000", fillOpacity: 0.9 });
-                l.bringToFront();
-              },
-              mouseout: (e) => {
-                const l = e.target;
-                l.setStyle({ weight: 1.5, color: "#374151", fillOpacity: 0.7 });
-              },
-            });
-          }}
-        />
-      </MapContainer>
-    </div>
+      if (id === hoveredId) {
+        return {
+          fillColor: getColor(score),
+          weight: 3.5,
+          opacity: 1,
+          color: "#000000",
+          fillOpacity: 0.95,
+        };
+      }
+
+      return {
+        fillColor: getColor(score),
+        weight: 1.5,
+        opacity: 1,
+        color: "#374151",
+        fillOpacity: 0.7,
+      };
+    },
+    [selectedMetric, hoveredId],
+  );
+
+  const onEachFeature = useCallback(
+    (feature: unknown, layer: unknown) => {
+      const props = (feature as Record<string, unknown>)?.properties as Record<string, unknown> | undefined;
+      const id = (props?.id as number) ?? -1;
+      const name = (props?.name as string) ?? "Onbekend";
+      const safety = props?.safetyScore as number | null;
+      const green = props?.greenScore as number | null;
+      const quiet = props?.quietScore as number | null;
+
+      const l = layer as LeafletGeoJSON;
+      l.bindPopup(
+        `<div class="text-sm font-sans">
+          <strong class="text-base">${name}</strong><br/>
+          🛡️ Veiligheid: ${safety?.toFixed(1) ?? "—"}<br/>
+          🌿 Groen: ${green?.toFixed(1) ?? "—"}<br/>
+          🤫 Rust: ${quiet?.toFixed(1) ?? "—"}
+        </div>`,
+      );
+      l.on({
+        mouseover: () => onHover(id),
+        mouseout: () => onHover(null),
+      });
+    },
+    [onHover],
+  );
+
+  return (
+    <MapContainer
+      center={[52.1326, 5.2913]}
+      zoom={10}
+      className="h-full w-full"
+      scrollWheelZoom={true}
+      zoomControl={true}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <GeoJSON
+        key={selectedMetric}
+        data={geoJsonData}
+        style={getStyle}
+        onEachFeature={onEachFeature}
+      />
+    </MapContainer>
   );
 }
