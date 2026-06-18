@@ -16,9 +16,8 @@ function formatCitySlug(slug: string): string {
 async function getCityData(slug: string): Promise<NeighborhoodsApiResponse | null> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
   try {
-    const res = await fetch(`${baseUrl}/api/neighborhoods?city=${slug}`, {
-      next: { revalidate: 3600 },
-    });
+    const isDev = process.env.NODE_ENV !== "production";
+    const res = await fetch(`${baseUrl}/api/neighborhoods?city=${slug}`, isDev ? { cache: "no-store" } : { next: { revalidate: 3600 } });
     if (res.status === 404) return null;
     if (!res.ok) return null;
     return res.json();
