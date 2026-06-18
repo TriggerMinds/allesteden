@@ -8,19 +8,27 @@ import {
   Search,
   ArrowUpDown,
   Sliders,
-  Star,
+  Shield,
+  Users,
   TreeDeciduous,
   Ear,
-  Users,
   Euro,
   Medal,
 } from "lucide-react";
 import type { NeighborhoodResponse } from "@/lib/api/types";
 
-type SortKey = "name" | "safetyScore" | "greenScore" | "quietScore" | "weighted";
+type SortKey =
+  | "name"
+  | "safetyScore"
+  | "theftSafetyScore"
+  | "socialSafetyScore"
+  | "greenScore"
+  | "quietScore"
+  | "weighted";
 
 interface WeightState {
-  safety: number;
+  theft: number;
+  social: number;
   green: number;
   quiet: number;
 }
@@ -44,7 +52,10 @@ function formatScore(value: number | null): string {
   return value.toFixed(1);
 }
 
-function getDetailsValue(details: Record<string, unknown> | null, key: string): number | null {
+function getDetailsValue(
+  details: Record<string, unknown> | null,
+  key: string,
+): number | null {
   if (!details) return null;
   const val = details[key];
   if (typeof val === "number") return val;
@@ -57,13 +68,19 @@ function formatNumber(n: number): string {
   return n.toLocaleString("nl-NL");
 }
 
-const DEFAULT_WEIGHTS: WeightState = { safety: 33, green: 33, quiet: 34 };
+const DEFAULT_WEIGHTS: WeightState = {
+  theft: 25,
+  social: 25,
+  green: 25,
+  quiet: 25,
+};
 
 function weightedScore(n: NeighborhoodResponse, w: WeightState): number {
-  const s = (n.safetyScore ?? 5) * (w.safety / 100);
+  const t = (n.theftSafetyScore ?? 5) * (w.theft / 100);
+  const s = (n.socialSafetyScore ?? 5) * (w.social / 100);
   const g = (n.greenScore ?? 5) * (w.green / 100);
   const q = (n.quietScore ?? 5) * (w.quiet / 100);
-  return Math.round((s + g + q) * 10) / 10;
+  return Math.round((t + s + g + q) * 10) / 10;
 }
 
 export default function CityContent({
@@ -72,7 +89,8 @@ export default function CityContent({
 }: CityContentProps) {
   const [selectedMetric, setSelectedMetric] = useState<SortKey>("weighted");
   const [hoveredId, setHoveredId] = useState<number | null>(null);
-  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<number | null>(null);
+  const [selectedNeighborhoodId, setSelectedNeighborhoodId] =
+    useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [weights, setWeights] = useState<WeightState>(DEFAULT_WEIGHTS);
   const [showWeights, setShowWeights] = useState(false);
@@ -162,12 +180,19 @@ export default function CityContent({
 
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-emerald-50 p-4 text-center">
-                  <Star className="size-5 text-amber-400 mx-auto mb-1" />
+                <div className="rounded-xl bg-red-50 p-4 text-center">
+                  <Shield className="size-5 text-red-500 mx-auto mb-1" />
                   <p className="text-2xl font-bold text-zinc-900">
-                    {formatScore(selectedNeighborhood.safetyScore)}
+                    {formatScore(selectedNeighborhood.theftSafetyScore)}
                   </p>
-                  <p className="text-xs text-zinc-500">Veiligheid</p>
+                  <p className="text-xs text-zinc-500">Woninginbraken</p>
+                </div>
+                <div className="rounded-xl bg-orange-50 p-4 text-center">
+                  <Users className="size-5 text-orange-500 mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-zinc-900">
+                    {formatScore(selectedNeighborhood.socialSafetyScore)}
+                  </p>
+                  <p className="text-xs text-zinc-500">Sociale veiligheid</p>
                 </div>
                 <div className="rounded-xl bg-green-50 p-4 text-center">
                   <TreeDeciduous className="size-5 text-emerald-500 mx-auto mb-1" />
@@ -183,6 +208,9 @@ export default function CityContent({
                   </p>
                   <p className="text-xs text-zinc-500">Rust</p>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-violet-50 p-4 text-center">
                   <Users className="size-5 text-violet-500 mx-auto mb-1" />
                   <p className="text-2xl font-bold text-zinc-900">
@@ -192,21 +220,16 @@ export default function CityContent({
                   </p>
                   <p className="text-xs text-zinc-500">Inwoners</p>
                 </div>
-              </div>
-
-              {detailIncome !== null && (
-                <div className="rounded-xl bg-zinc-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                      <Euro className="size-4 text-green-600" />
-                      Gemiddeld inkomen
-                    </div>
-                    <span className="text-lg font-bold text-zinc-900">
+                {detailIncome !== null && (
+                  <div className="rounded-xl bg-zinc-50 p-4 text-center">
+                    <Euro className="size-5 text-green-600 mx-auto mb-1" />
+                    <p className="text-2xl font-bold text-zinc-900">
                       €{formatNumber(detailIncome)}
-                    </span>
+                    </p>
+                    <p className="text-xs text-zinc-500">Inkomen</p>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </>
         ) : (
@@ -255,7 +278,8 @@ export default function CityContent({
 
                   {(
                     [
-                      { key: "safety" as const, label: "Veiligheid", icon: Star, color: "text-amber-400" },
+                      { key: "theft" as const, label: "Woninginbraken", icon: Shield, color: "text-red-500" },
+                      { key: "social" as const, label: "Sociale veiligheid", icon: Users, color: "text-orange-500" },
                       { key: "green" as const, label: "Groen", icon: TreeDeciduous, color: "text-emerald-500" },
                       { key: "quiet" as const, label: "Rust", icon: Ear, color: "text-sky-500" },
                     ] as const
@@ -275,7 +299,9 @@ export default function CityContent({
                         min={0}
                         max={100}
                         value={weights[key]}
-                        onChange={(e) => updateWeight(key, Number(e.target.value))}
+                        onChange={(e) =>
+                          updateWeight(key, Number(e.target.value))
+                        }
                         className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-emerald-600 bg-zinc-200"
                       />
                     </div>
@@ -299,7 +325,8 @@ export default function CityContent({
                 <div className="flex flex-wrap gap-1.5">
                   {[
                     { key: "weighted" as SortKey, label: "Totaal" },
-                    { key: "safetyScore" as SortKey, label: "Veiligheid" },
+                    { key: "theftSafetyScore" as SortKey, label: "Inbraken" },
+                    { key: "socialSafetyScore" as SortKey, label: "Sociaal" },
                     { key: "greenScore" as SortKey, label: "Groen" },
                     { key: "quietScore" as SortKey, label: "Rust" },
                     { key: "name" as SortKey, label: "Naam" },
@@ -371,9 +398,15 @@ export default function CityContent({
 
                       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-500">
                         <span className="inline-flex items-center gap-1">
-                          <Star className="size-3.5 text-amber-400" />
+                          <Shield className="size-3.5 text-red-400" />
                           <span className="font-medium text-zinc-700">
-                            {formatScore(n.safetyScore)}
+                            {formatScore(n.theftSafetyScore)}
+                          </span>
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="size-3.5 text-orange-400" />
+                          <span className="font-medium text-zinc-700">
+                            {formatScore(n.socialSafetyScore)}
                           </span>
                         </span>
                         <span className="inline-flex items-center gap-1">
@@ -385,7 +418,10 @@ export default function CityContent({
                           <span>{formatScore(n.quietScore)}</span>
                         </span>
                         {(() => {
-                          const pop = getDetailsValue(n.details, "aantalinwoners");
+                          const pop = getDetailsValue(
+                            n.details,
+                            "aantalinwoners",
+                          );
                           return pop !== null ? (
                             <span className="inline-flex items-center gap-1">
                               <Users className="size-3.5 text-violet-500" />

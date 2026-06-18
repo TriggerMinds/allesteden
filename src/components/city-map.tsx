@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 import type { NeighborhoodResponse, GeoJsonGeometry } from "@/lib/api/types";
 
-type SortKey = "name" | "safetyScore" | "greenScore" | "quietScore" | "weighted";
+type SortKey = "name" | "safetyScore" | "theftSafetyScore" | "socialSafetyScore" | "greenScore" | "quietScore" | "weighted";
 
 interface CityMapProps {
   neighborhoods: NeighborhoodResponse[];
@@ -40,6 +40,8 @@ function buildFeatureCollection(
           id: n.id,
           name: n.name,
           safetyScore: n.safetyScore,
+          theftSafetyScore: n.theftSafetyScore,
+          socialSafetyScore: n.socialSafetyScore,
           greenScore: n.greenScore,
           quietScore: n.quietScore,
           weightedScore: weightedScores[n.id] ?? null,

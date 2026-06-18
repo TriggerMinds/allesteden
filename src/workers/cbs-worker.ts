@@ -3,8 +3,7 @@ import { getBullConnection } from "../lib/queue/connection";
 import { QUEUES, type CbsDataJobData } from "../lib/queue/constants";
 import { createJobLogger } from "./logger";
 
-const CBS_PDOK_URL =
-  "https://service.pdok.nl/cbs/wijken-buurten/2024/atom/downloads/wijken_buurten_2024.geojson";
+const OGC_API_BASE = "https://api.pdok.nl/cbs/wijken-en-buurten-2023/ogc/v1/collections/buurten/items";
 
 interface CbsFeature {
   type: "Feature";
@@ -12,23 +11,23 @@ interface CbsFeature {
     wijknaam?: string;
     buurtnaam?: string;
     gemeentenaam?: string;
-    wijkoppervlakte_ha?: number;
-    wateroppervlakte_ha?: number;
     aantalinwoners?: number;
+    grote_supermarkt_gemiddelde_afstand_in_km?: number;
+    restaurant_gemiddelde_afstand_in_km?: number;
+    treinstation_gemiddelde_afstand_in_km?: number;
+    oprit_hoofdverkeersweg_gemiddelde_afstand_in_km?: number;
+    percentage_bouwjaarklasse_tot_2000?: number;
+    percentage_bouwjaarklasse_vanaf_2000?: number;
+    percentage_eengezinswoning?: number;
+    percentage_meergezinswoning?: number;
+    percentage_huurwoningen?: number;
+    percentage_koopwoningen?: number;
     [key: string]: unknown;
   };
   geometry: {
     type: string;
     coordinates: number[][][] | number[][][][];
-  };
-}
-
-async function downloadCbsData(url: string): Promise<{ type: string; features: CbsFeature[] }> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`CBS PDOK download failed: ${response.status} ${response.statusText}`);
-  }
-  return response.json();
+  } | null;
 }
 
 function determineSlug(name: string): string {
@@ -38,9 +37,14 @@ function determineSlug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
-async function upsertCity(
-  cityName: string,
-) {
+function calculateDistanceScore(distance: number | undefined | null, multiplier: number = 2): number | null {
+  if (distance == null || distance < 0) return null;
+  // Simple mapping: 0 km = 10, X km = 0
+  const score = Math.max(0, 10 - distance * multiplier);
+  return Math.round(score * 10) / 10;
+}
+
+async function upsertCity(cityName: string) {
   const { prisma } = await import("../lib/prisma");
   const slug = determineSlug(cityName);
   return prisma.city.upsert({
@@ -55,26 +59,64 @@ async function upsertNeighborhood(
   feature: CbsFeature,
   log: ReturnType<typeof createJobLogger>,
 ) {
+  if (!feature.geometry) return;
   const { prisma } = await import("../lib/prisma");
   const props = feature.properties;
+  
   const name = props.buurtnaam ?? props.wijknaam ?? "Unknown";
   const slug = `${determineSlug(name)}-${cityId}`;
   const geometryGeoJson = JSON.stringify(feature.geometry);
 
+  // Compute our 0-10 scores
+  const hospitalityScore = calculateDistanceScore(props.restaurant_gemiddelde_afstand_in_km, 2); // 5km = 0
+  const dailyShoppingScore = calculateDistanceScore(props.grote_supermarkt_gemiddelde_afstand_in_km, 3); // 3.3km = 0
+  
+  let accessibilityScore: number | null = null;
+  const trainDist = props.treinstation_gemiddelde_afstand_in_km;
+  const highwayDist = props.oprit_hoofdverkeersweg_gemiddelde_afstand_in_km;
+  if (trainDist != null && trainDist >= 0 && highwayDist != null && highwayDist >= 0) {
+    const avgDist = (trainDist + highwayDist) / 2;
+    accessibilityScore = calculateDistanceScore(avgDist, 1.5);
+  }
+
+  const demographicData = {
+    inwoners: props.aantalinwoners,
+    bouwjaar: {
+      tot_2000: props.percentage_bouwjaarklasse_tot_2000,
+      vanaf_2000: props.percentage_bouwjaarklasse_vanaf_2000,
+    },
+    woningtype: {
+      eengezinswoning: props.percentage_eengezinswoning,
+      meergezinswoning: props.percentage_meergezinswoning,
+      huur: props.percentage_huurwoningen,
+      koop: props.percentage_koopwoningen,
+    },
+    ...props
+  };
+
   try {
     await prisma.$executeRawUnsafe(
-      `INSERT INTO neighborhoods (city_id, name, slug, geometry, details_json)
-       VALUES ($1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4), 4326), $5::jsonb)
+      `INSERT INTO neighborhoods (
+         city_id, name, slug, geometry, details_json, 
+         hospitality_score, daily_shopping_score, accessibility_score
+       )
+       VALUES ($1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4), 4326), $5::jsonb, $6, $7, $8)
        ON CONFLICT (city_id, slug)
        DO UPDATE SET
          name = EXCLUDED.name,
          geometry = EXCLUDED.geometry,
-         details_json = EXCLUDED.details_json`,
+         details_json = EXCLUDED.details_json,
+         hospitality_score = EXCLUDED.hospitality_score,
+         daily_shopping_score = EXCLUDED.daily_shopping_score,
+         accessibility_score = EXCLUDED.accessibility_score`,
       cityId,
       name,
       slug,
       geometryGeoJson,
-      JSON.stringify(props),
+      JSON.stringify(demographicData),
+      hospitalityScore,
+      dailyShoppingScore,
+      accessibilityScore
     );
   } catch (err) {
     log.warn({ err, featureName: name }, "Failed to upsert neighborhood geometry");
@@ -83,36 +125,50 @@ async function upsertNeighborhood(
 
 export async function processCbsData(job: Job<CbsDataJobData>): Promise<{ imported: number; cities: Set<string> }> {
   const log = createJobLogger(job.id ?? undefined, QUEUES.CBS_DATA);
-  const url = job.data.url ?? CBS_PDOK_URL;
+  const targetCity = job.data.url; // Use url field as city filter if provided for local testing
 
-  log.info({ url }, "Starting CBS geometry import");
+  log.info({ targetCity }, "Starting CBS geometry import from OGC API");
 
-  const geoJson = await downloadCbsData(url);
-  log.info({ featureCount: geoJson.features.length }, "Downloaded CBS GeoJSON data");
-
-  const cities = new Set<string>();
+  let offset = 0;
+  const limit = 1000;
+  let hasMore = true;
   let imported = 0;
+  const cities = new Set<string>();
 
-  for (const feature of geoJson.features) {
-    const cityName = feature.properties.gemeentenaam;
-    if (!cityName) continue;
-    cities.add(cityName);
-  }
-
-  for (const cityName of cities) {
-    try {
-      const city = await upsertCity(cityName);
-      const cityFeatures = geoJson.features.filter(
-        (f) => f.properties.gemeentenaam === cityName,
-      );
-      for (const feature of cityFeatures) {
-        await upsertNeighborhood(city.id, feature, log);
-        imported++;
-      }
-      log.info({ city: cityName, neighborhoods: cityFeatures.length }, "Imported city neighborhoods");
-    } catch (err) {
-      log.error({ err, city: cityName }, "Failed to import city");
+  while (hasMore) {
+    const url = `${OGC_API_BASE}?limit=${limit}&offset=${offset}`;
+    log.info({ offset }, "Fetching CBS OGC batch");
+    
+    const res = await fetch(url);
+    if (!res.ok) {
+      log.error({ status: res.status }, "CBS API failed");
+      break;
     }
+    
+    const data = await res.json();
+    const features: CbsFeature[] = data.features;
+    
+    if (!features || features.length === 0) {
+      hasMore = false;
+      break;
+    }
+
+    for (const feature of features) {
+      const cityName = feature.properties.gemeentenaam;
+      if (!cityName) continue;
+      
+      // If a specific city is requested (for speed during local testing), skip others
+      if (targetCity && cityName.toLowerCase() !== targetCity.toLowerCase()) {
+        continue;
+      }
+      
+      cities.add(cityName);
+      const city = await upsertCity(cityName);
+      await upsertNeighborhood(city.id, feature, log);
+      imported++;
+    }
+    
+    offset += limit;
   }
 
   log.info({ totalImported: imported, totalCities: cities.size }, "CBS import completed");
@@ -127,8 +183,8 @@ export function createCbsWorker(): Worker {
     },
     {
       connection: getBullConnection(),
-      concurrency: 2,
-      lockDuration: 120_000,
+      concurrency: 1,
+      lockDuration: 300_000,
     },
   );
 

@@ -16,6 +16,8 @@ export interface NeighborhoodResponse {
   name: string;
   slug: string;
   safetyScore: number | null;
+  theftSafetyScore: number | null;
+  socialSafetyScore: number | null;
   greenScore: number | null;
   quietScore: number | null;
   geometry: GeoJsonGeometry | null;

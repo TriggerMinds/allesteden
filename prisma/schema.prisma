@@ -17,16 +17,27 @@ model City {
 }
 
 model Neighborhood {
-  id          Int      @id @default(autoincrement())
-  cityId      Int
-  name        String
-  slug        String
-  geometry    Unsupported("geometry(Geometry,4326)")
-  safetyScore Float?   @map("safety_score")
-  greenScore  Float?   @map("green_score")
-  quietScore  Float?   @map("quiet_score")
-  detailsJson Json?    @map("details_json")
-  city        City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  id                    Int      @id @default(autoincrement())
+  cityId                Int      @map("city_id")
+  name                  String
+  slug                  String
+  geometry              Unsupported("geometry(Geometry,4326)")
+  
+  // The 8 Core Scores (0.0 to 10.0)
+  socialSafetyScore     Float?   @map("social_safety_score")
+  theftSafetyScore      Float?   @map("theft_safety_score")
+  quietScore            Float?   @map("quiet_score")
+  greenScore            Float?   @map("green_score")
+  accessibilityScore    Float?   @map("accessibility_score")
+  hospitalityScore      Float?   @map("hospitality_score")
+  dailyShoppingScore    Float?   @map("daily_shopping_score")
+  leefbaarometerScore   Float?   @map("leefbaarometer_score")
+  
+  // Legacy / fallback scores (if still used)
+  safetyScore           Float?   @map("safety_score")
+  
+  detailsJson           Json?    @map("details_json")
+  city                  City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
 
   @@unique([cityId, slug])
   @@index([cityId])

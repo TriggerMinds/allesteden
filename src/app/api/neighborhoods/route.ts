@@ -69,6 +69,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       name: string;
       slug: string;
       safety_score: number | null;
+      theft_safety_score: number | null;
+      social_safety_score: number | null;
       green_score: number | null;
       quiet_score: number | null;
       geometry: unknown;
@@ -77,7 +79,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   >(
     `SELECT
       id, city_id, name, slug,
-      safety_score, green_score, quiet_score,
+      safety_score, theft_safety_score, social_safety_score,
+      green_score, quiet_score,
       ST_AsGeoJSON(geometry)::jsonb AS geometry,
       details_json
     FROM neighborhoods
@@ -94,6 +97,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       name: n.name,
       slug: n.slug,
       safetyScore: n.safety_score,
+      theftSafetyScore: n.theft_safety_score,
+      socialSafetyScore: n.social_safety_score,
       greenScore: n.green_score,
       quietScore: n.quiet_score,
       geometry: parseGeometry(n.geometry),
