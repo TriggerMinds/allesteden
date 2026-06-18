@@ -41,6 +41,10 @@ yarn-error.log*
 /src/lib/prisma/client
 /src/lib/__generated__
 
+# playwright artifacts
+.playwright-mcp/
+*.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
