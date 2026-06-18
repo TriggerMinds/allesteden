@@ -22,5 +22,34 @@ body {
 .leaflet-container {
   width: 100%;
   height: 100%;
-  border-radius: 0.75rem;
+}
+
+.custom-neighborhood-popup .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+}
+
+.custom-neighborhood-popup .leaflet-popup-content {
+  margin: 8px 12px;
+}
+
+.custom-neighborhood-popup .leaflet-popup-tip {
+  box-shadow: none;
+}
+
+.leaflet-tooltip {
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #18181b;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(4px);
+}
+
+.leaflet-tooltip-top:before {
+  border-top-color: #e4e4e7;
 }

@@ -17,13 +17,63 @@ interface CityMapProps {
   onSelect: (id: number | null) => void;
 }
 
-function getColor(score: number | null): string {
+const COLOR_STOPS = [
+  { min: 0, max: 2, color: "#dc2626", label: "0 – 2" },
+  { min: 2, max: 4, color: "#f97316", label: "2 – 4" },
+  { min: 4, max: 6, color: "#eab308", label: "4 – 6" },
+  { min: 6, max: 8, color: "#22c55e", label: "6 – 8" },
+  { min: 8, max: 10, color: "#166534", label: "8 – 10" },
+] as const;
+
+function getScoreColor(score: number | null): string {
   if (score === null) return "#e4e4e7";
   if (score >= 8) return "#166534";
   if (score >= 6) return "#22c55e";
   if (score >= 4) return "#eab308";
   if (score >= 2) return "#f97316";
   return "#dc2626";
+}
+
+function metricLabel(key: SortKey): string {
+  const map: Record<string, string> = {
+    theftSafetyScore: "Woninginbraken",
+    socialSafetyScore: "Sociale veiligheid",
+    greenScore: "Groen",
+    quietScore: "Rust",
+    safetyScore: "Veiligheid",
+    weighted: "Totaal (Gewogen)",
+    name: "Naam",
+  };
+  return map[key] ?? key;
+}
+
+function formatScore(v: number | null): string {
+  if (v === null) return "—";
+  return v.toFixed(1);
+}
+
+function popupHtml(props: Record<string, unknown>): string {
+  const name = (props.name as string) ?? "Onbekend";
+  const theft = props.theftSafetyScore as number | null;
+  const social = props.socialSafetyScore as number | null;
+  const green = props.greenScore as number | null;
+  const quiet = props.quietScore as number | null;
+
+  const row = (icon: string, label: string, val: number | null) =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;font-family:system-ui,sans-serif">
+      <span style="width:18px;text-align:center">${icon}</span>
+      <span style="flex:1;color:#71717a">${label}</span>
+      <span style="font-weight:600;color:#18181b">${formatScore(val)}</span>
+    </div>`;
+
+  return `
+    <div style="min-width:200px">
+      <div style="font-weight:700;font-size:15px;font-family:system-ui,sans-serif;color:#18181b;padding:0 0 6px 0;border-bottom:1px solid #e4e4e7;margin-bottom:6px">${name}</div>
+      ${row("🛡️", "Woninginbraken", theft)}
+      ${row("👥", "Sociale veiligheid", social)}
+      ${row("🌿", "Groen", green)}
+      ${row("🤫", "Rust", quiet)}
+    </div>`;
 }
 
 function buildFeatureCollection(
@@ -49,6 +99,59 @@ function buildFeatureCollection(
         geometry: n.geometry as GeoJsonGeometry,
       })),
   };
+}
+
+function LegendControl({ selectedMetric }: { selectedMetric: SortKey }) {
+  const map = useMap();
+  const ctrlRef = useRef<L.Control | null>(null);
+
+  useEffect(() => {
+    if (ctrlRef.current) {
+      ctrlRef.current.remove();
+    }
+
+    const Legend = L.Control.extend({
+      onAdd: () => {
+        const div = L.DomUtil.create("div");
+        div.style.cssText =
+          "background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);padding:12px 14px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:system-ui,sans-serif;font-size:12px;min-width:160px;border:1px solid rgba(0,0,0,0.06)";
+
+        const title = document.createElement("div");
+        title.style.cssText = "font-weight:700;font-size:13px;color:#18181b;margin-bottom:8px";
+        title.textContent = `Score: ${metricLabel(selectedMetric)}`;
+        div.appendChild(title);
+
+        for (const stop of COLOR_STOPS) {
+          const row = document.createElement("div");
+          row.style.cssText = "display:flex;align-items:center;gap:8px;padding:2px 0";
+
+          const swatch = document.createElement("span");
+          swatch.style.cssText = `display:inline-block;width:14px;height:14px;border-radius:3px;background:${stop.color};flex-shrink:0`;
+          row.appendChild(swatch);
+
+          const label = document.createElement("span");
+          label.style.cssText = "color:#52525b";
+          label.textContent = stop.label;
+          row.appendChild(label);
+
+          div.appendChild(row);
+        }
+
+        return div;
+      },
+    });
+
+    const legend = new Legend({ position: "bottomright" });
+    legend.addTo(map);
+    ctrlRef.current = legend;
+
+    return () => {
+      legend.remove();
+      ctrlRef.current = null;
+    };
+  }, [map, selectedMetric]);
+
+  return null;
 }
 
 function MapController({
@@ -118,32 +221,32 @@ export default function CityMap({
       const isSelected = id === selectedId;
       const isHovered = id === hoveredId;
 
-      if (isSelected) {
-        return {
-          fillColor: getColor(score),
-          weight: 4,
-          opacity: 1,
-          color: "#000000",
-          fillOpacity: 0.95,
-          dashArray: "6 3",
-        };
-      }
-      if (isHovered) {
-        return {
-          fillColor: getColor(score),
-          weight: 3.5,
-          opacity: 1,
-          color: "#000000",
-          fillOpacity: 0.9,
-        };
-      }
-      return {
-        fillColor: getColor(score),
+      const base: L.PathOptions = {
+        fillColor: getScoreColor(score),
         weight: 1.2,
         opacity: 1,
         color: "#9ca3af",
         fillOpacity: 0.65,
       };
+
+      if (isSelected) {
+        return {
+          ...base,
+          weight: 4,
+          color: "#18181b",
+          fillOpacity: 0.92,
+          dashArray: "8 4",
+        };
+      }
+      if (isHovered) {
+        return {
+          ...base,
+          weight: 3,
+          color: "#059669",
+          fillOpacity: 0.88,
+        };
+      }
+      return base;
     },
     [selectedMetric, hoveredId, selectedId],
   );
@@ -154,10 +257,25 @@ export default function CityMap({
       const id = (props?.id as number) ?? -1;
 
       const l = layer as L.GeoJSON;
+
+      l.bindTooltip((props?.name as string) ?? "Onbekend", {
+        direction: "top",
+        offset: L.point(0, -8),
+        className: "rounded-lg shadow-lg border border-zinc-200 bg-white/95 text-sm font-medium text-zinc-800 px-3 py-1.5",
+      });
+
+      l.bindPopup(popupHtml(props ?? {}), {
+        maxWidth: 260,
+        className: "custom-neighborhood-popup",
+        closeButton: true,
+      });
+
       l.on({
         mouseover: () => onHover(id),
         mouseout: () => onHover(null),
-        click: () => onSelect(id === selectedId ? null : id),
+        click: () => {
+          onSelect(id === selectedId ? null : id);
+        },
       });
     },
     [onHover, onSelect, selectedId],
@@ -186,6 +304,7 @@ export default function CityMap({
         selectedId={selectedId}
         neighborhoods={neighborhoods}
       />
+      <LegendControl selectedMetric={selectedMetric} />
     </MapContainer>
   );
 }

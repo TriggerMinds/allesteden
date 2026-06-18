@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
@@ -94,6 +94,13 @@ export default function CityContent({
   const [searchQuery, setSearchQuery] = useState("");
   const [weights, setWeights] = useState<WeightState>(DEFAULT_WEIGHTS);
   const [showWeights, setShowWeights] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedNeighborhoodId === null) return;
+    const el = listRef.current?.querySelector(`[data-id="${selectedNeighborhoodId}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedNeighborhoodId]);
 
   const weightedScores = useMemo(() => {
     const map: Record<number, number> = {};
@@ -354,7 +361,7 @@ export default function CityContent({
               </p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+            <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-2.5">
               {sortedAndFiltered.length === 0 && (
                 <p className="text-sm text-zinc-400 text-center py-8">
                   Geen wijken gevonden
@@ -363,6 +370,7 @@ export default function CityContent({
               {sortedAndFiltered.map((n, i) => (
                 <button
                   key={n.id}
+                  data-id={n.id}
                   type="button"
                   onMouseEnter={() => setHoveredId(n.id)}
                   onMouseLeave={() => setHoveredId(null)}
