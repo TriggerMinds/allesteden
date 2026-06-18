@@ -125,11 +125,12 @@ async function upsertNeighborhood(
 
 export async function processCbsData(job: Job<CbsDataJobData>): Promise<{ imported: number; cities: Set<string> }> {
   const log = createJobLogger(job.id ?? undefined, QUEUES.CBS_DATA);
-  const targetCity = job.data.url; // Use url field as city filter if provided for local testing
+  const bbox = job.data.bbox;
 
-  log.info({ url: CBS_OGC_URL }, "Starting CBS geometry import");
+  const url = bbox ? `${CBS_OGC_URL}?bbox=${bbox}` : CBS_OGC_URL;
+  log.info({ url, bbox: bbox ?? "none" }, "Starting CBS geometry import");
 
-  const res = await fetch(CBS_OGC_URL, {
+  const res = await fetch(url, {
     headers: { Accept: "application/geo+json" },
   });
   if (!res.ok) {
@@ -147,10 +148,6 @@ export async function processCbsData(job: Job<CbsDataJobData>): Promise<{ import
   for (const feature of features) {
     const cityName = feature.properties.gemeentenaam;
     if (!cityName) continue;
-
-    if (targetCity && cityName.toLowerCase() !== targetCity.toLowerCase()) {
-      continue;
-    }
 
     cities.add(cityName);
     const city = await upsertCity(cityName);

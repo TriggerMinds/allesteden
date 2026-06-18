@@ -9,6 +9,7 @@ export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 export interface CbsDataJobData {
   year?: number;
   url?: string;
+  bbox?: string;
 }
 
 export interface PoliceDataJobData {
