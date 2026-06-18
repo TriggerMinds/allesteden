@@ -1,0 +1,486 @@
+[    3680ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[    3756ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[    3836ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[    3923ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[    3945ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[    4013ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[    7145ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[    7198ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[   13163ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[   13223ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[   13365ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[   13397ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[   15963ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[   16022ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/?_rsc=q3mOO9BClNZHexY7:0
+[   16068ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/?_rsc=q3mOO9BClNZHexY7:0
+[   16077ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[   16202ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0kla17-._.js:15305
+[   16261ms] Error: ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./src/lib/prisma/index.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at Object.getCompilationErrors (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\next-dev-server.js:720:42)
+    at DevServer.findPageComponents (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\next-dev-server.js:690:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\base-server.js:1753:26)
+[   16261ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   16265ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   16321ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   16367ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   36048ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   36087ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   40155ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   40214ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   40276ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   41023ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   41086ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   41125ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[   41162ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0kla17-._.js:15305
+[   41182ms] Error: ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./src/lib/prisma/index.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at Object.getCompilationErrors (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\next-dev-server.js:720:42)
+    at DevServer.findPageComponents (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\next-dev-server.js:690:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\base-server.js:1753:26)
+[   41183ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   41197ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   41228ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   41298ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   46049ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   46087ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   54605ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   54643ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   57400ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   57447ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   57522ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   58497ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   58536ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   58562ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[   58590ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0kla17-._.js:15305
+[   58597ms] Error: ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./src/lib/prisma/index.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at Object.getCompilationErrors (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\next-dev-server.js:720:42)
+    at DevServer.findPageComponents (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\next-dev-server.js:690:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\base-server.js:1753:26)
+[   58602ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   58617ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   58667ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   58713ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   66712ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   66776ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[   66796ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0kla17-._.js:15305
+[   66803ms] Error: ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./src/lib/prisma/index.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at Object.getCompilationErrors (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\next-dev-server.js:720:42)
+    at DevServer.findPageComponents (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\dev\next-dev-server.js:690:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\gewoo\allesteden\node_modules\next\dist\server\base-server.js:1753:26)
+[   66806ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   66813ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   66865ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   71733ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   71779ms] [ERROR] ./src/lib/prisma/index.ts:1:1
+Module not found: Can't resolve './client/client.js'
+> 1 | import { PrismaClient } from "./client/client.js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { PrismaPg } from "@prisma/adapter-pg";
+  3 | import pg from "pg";
+  4 |
+
+Import trace:
+  App Route:
+    ./src/lib/prisma/index.ts
+    ./src/app/api/cities/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1945
+[   71842ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   79414ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1gdrd03._.js:1226
+[   80183ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[   80209ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
