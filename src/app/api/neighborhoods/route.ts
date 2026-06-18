@@ -22,20 +22,25 @@ function computeCoreScore(n: {
   social_safety_score?: number | null;
   green_score?: number | null;
   quiet_score?: number | null;
+  safety_score?: number | null;
   leefbaarometer_score?: number | null;
   accessibility_score?: number | null;
   hospitality_score?: number | null;
   daily_shopping_score?: number | null;
-  safety_score?: number | null;
 }): number {
   const core = [
     n.theft_safety_score,
     n.social_safety_score,
     n.green_score,
     n.quiet_score,
+    n.safety_score,
   ].filter((s): s is number => s !== null);
 
-  if (core.length >= 2) {
+  if (core.length >= 3) {
+    const avg = core.reduce((a, b) => a + b, 0) / core.length;
+    return Math.round(avg * 10) / 10;
+  }
+  if (core.length >= 1) {
     const avg = core.reduce((a, b) => a + b, 0) / core.length;
     return Math.round(avg * 10) / 10;
   }
@@ -52,7 +57,7 @@ function computeCoreScore(n: {
     return Math.round(avg * 10) / 10;
   }
 
-  return n.safety_score ?? 5;
+  return 5;
 }
 
 function computeCategory(score: number | null): string {

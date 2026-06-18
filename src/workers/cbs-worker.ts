@@ -85,6 +85,41 @@ async function upsertNeighborhood(
     leefbaarometerScore = Math.round((props.percentage_koopwoningen / 10) * 10) / 10;
   }
 
+  // Green score: average of park + forest distance (inverted: closer = higher)
+  let greenScore: number | null = null;
+  const parkDist = props.afstand_tot_park_of_plantsoen as number | undefined;
+  const forestDist = props.afstand_tot_bos as number | undefined;
+  if (parkDist != null || forestDist != null) {
+    const distances = [parkDist, forestDist].filter((d): d is number => d != null && d >= 0);
+    if (distances.length > 0) {
+      const avgDist = distances.reduce((a, b) => a + b, 0) / distances.length;
+      greenScore = Math.round(Math.max(0, 10 - avgDist * 2) * 10) / 10;
+    }
+  }
+
+  // Quiet score: from urban density (inverted: fewer addresses/km2 = quieter)
+  let quietScore: number | null = null;
+  const density = props.stedelijkheid_adressen_per_km2 as number | undefined;
+  if (density != null) {
+    quietScore = Math.round(Math.max(0, 10 - density / 2500) * 10) / 10;
+  }
+
+  // Safety proxy score: from income + employment + education
+  let safetyScore: number | null = null;
+  const lowIncome = props.percentage_huishoudens_met_laag_inkomen as number | undefined;
+  const unemployed = props.percentage_werknemers_met_flexibele_arbeidsrelatie as number | undefined;
+  const highEdu = props.opleidingsniveau_hoog as number | undefined;
+  if (lowIncome != null || unemployed != null || highEdu != null) {
+    const riskFactors: number[] = [];
+    if (lowIncome != null) riskFactors.push(lowIncome);
+    if (unemployed != null) riskFactors.push(unemployed);
+    const avgRisk = riskFactors.length > 0
+      ? riskFactors.reduce((a, b) => a + b, 0) / riskFactors.length
+      : 50;
+    const eduBoost = highEdu != null ? highEdu / 5 : 0;
+    safetyScore = Math.round(Math.min(10, Math.max(0, 10 - avgRisk / 10 + eduBoost)) * 10) / 10;
+  }
+
   const demographicData = {
     inwoners: props.aantalinwoners,
     bouwjaar: {
@@ -105,9 +140,9 @@ async function upsertNeighborhood(
       `INSERT INTO neighborhoods (
          city_id, name, slug, geometry, details_json, 
          hospitality_score, daily_shopping_score, accessibility_score,
-         leefbaarometer_score
+         leefbaarometer_score, green_score, quiet_score, safety_score
        )
-       VALUES ($1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4), 4326), $5::jsonb, $6, $7, $8, $9)
+       VALUES ($1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4), 4326), $5::jsonb, $6, $7, $8, $9, $10, $11, $12)
        ON CONFLICT (city_id, slug)
        DO UPDATE SET
          name = EXCLUDED.name,
@@ -116,7 +151,10 @@ async function upsertNeighborhood(
          hospitality_score = EXCLUDED.hospitality_score,
          daily_shopping_score = EXCLUDED.daily_shopping_score,
          accessibility_score = EXCLUDED.accessibility_score,
-         leefbaarometer_score = COALESCE(EXCLUDED.leefbaarometer_score, neighborhoods.leefbaarometer_score)`,
+         leefbaarometer_score = COALESCE(EXCLUDED.leefbaarometer_score, neighborhoods.leefbaarometer_score),
+         green_score = COALESCE(EXCLUDED.green_score, neighborhoods.green_score),
+         quiet_score = COALESCE(EXCLUDED.quiet_score, neighborhoods.quiet_score),
+         safety_score = COALESCE(EXCLUDED.safety_score, neighborhoods.safety_score)`,
       cityId,
       name,
       slug,
@@ -125,7 +163,10 @@ async function upsertNeighborhood(
       hospitalityScore,
       dailyShoppingScore,
       accessibilityScore,
-      leefbaarometerScore
+      leefbaarometerScore,
+      greenScore,
+      quietScore,
+      safetyScore
     );
   } catch (err) {
     log.warn({ err, featureName: name }, "Failed to upsert neighborhood geometry");
