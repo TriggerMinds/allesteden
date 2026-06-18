@@ -79,6 +79,12 @@ async function upsertNeighborhood(
     accessibilityScore = calculateDistanceScore(avgDist, 1.5);
   }
 
+  // Fallback leefbaarometer score from homeownership rate (always available in CBS data)
+  let leefbaarometerScore: number | null = null;
+  if (props.percentage_koopwoningen != null) {
+    leefbaarometerScore = Math.round((props.percentage_koopwoningen / 10) * 10) / 10;
+  }
+
   const demographicData = {
     inwoners: props.aantalinwoners,
     bouwjaar: {
@@ -98,9 +104,10 @@ async function upsertNeighborhood(
     await prisma.$executeRawUnsafe(
       `INSERT INTO neighborhoods (
          city_id, name, slug, geometry, details_json, 
-         hospitality_score, daily_shopping_score, accessibility_score
+         hospitality_score, daily_shopping_score, accessibility_score,
+         leefbaarometer_score
        )
-       VALUES ($1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4), 4326), $5::jsonb, $6, $7, $8)
+       VALUES ($1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4), 4326), $5::jsonb, $6, $7, $8, $9)
        ON CONFLICT (city_id, slug)
        DO UPDATE SET
          name = EXCLUDED.name,
@@ -108,7 +115,8 @@ async function upsertNeighborhood(
          details_json = EXCLUDED.details_json,
          hospitality_score = EXCLUDED.hospitality_score,
          daily_shopping_score = EXCLUDED.daily_shopping_score,
-         accessibility_score = EXCLUDED.accessibility_score`,
+         accessibility_score = EXCLUDED.accessibility_score,
+         leefbaarometer_score = COALESCE(EXCLUDED.leefbaarometer_score, neighborhoods.leefbaarometer_score)`,
       cityId,
       name,
       slug,
@@ -116,7 +124,8 @@ async function upsertNeighborhood(
       JSON.stringify(demographicData),
       hospitalityScore,
       dailyShoppingScore,
-      accessibilityScore
+      accessibilityScore,
+      leefbaarometerScore
     );
   } catch (err) {
     log.warn({ err, featureName: name }, "Failed to upsert neighborhood geometry");

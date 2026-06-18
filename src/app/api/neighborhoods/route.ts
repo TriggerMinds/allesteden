@@ -22,6 +22,10 @@ function computeCoreScore(n: {
   social_safety_score?: number | null;
   green_score?: number | null;
   quiet_score?: number | null;
+  leefbaarometer_score?: number | null;
+  accessibility_score?: number | null;
+  hospitality_score?: number | null;
+  daily_shopping_score?: number | null;
   safety_score?: number | null;
 }): number {
   const core = [
@@ -35,6 +39,19 @@ function computeCoreScore(n: {
     const avg = core.reduce((a, b) => a + b, 0) / core.length;
     return Math.round(avg * 10) / 10;
   }
+
+  const cbsScores = [
+    n.leefbaarometer_score,
+    n.accessibility_score,
+    n.hospitality_score,
+    n.daily_shopping_score,
+  ].filter((s): s is number => s !== null);
+
+  if (cbsScores.length >= 1) {
+    const avg = cbsScores.reduce((a, b) => a + b, 0) / cbsScores.length;
+    return Math.round(avg * 10) / 10;
+  }
+
   return n.safety_score ?? 5;
 }
 
@@ -103,6 +120,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       social_safety_score: number | null;
       green_score: number | null;
       quiet_score: number | null;
+      leefbaarometer_score: number | null;
+      accessibility_score: number | null;
+      hospitality_score: number | null;
+      daily_shopping_score: number | null;
       geometry: unknown;
       details_json: Record<string, unknown> | null;
     }[]
@@ -110,7 +131,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     `SELECT
       id, city_id, name, slug,
       safety_score, theft_safety_score, social_safety_score,
-      green_score, quiet_score,
+      green_score, quiet_score, leefbaarometer_score,
+      accessibility_score, hospitality_score, daily_shopping_score,
       ST_AsGeoJSON(geometry)::jsonb AS geometry,
       details_json
     FROM neighborhoods
