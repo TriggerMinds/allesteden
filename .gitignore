@@ -45,6 +45,10 @@ yarn-error.log*
 .playwright-mcp/
 *.png
 
+# backend agent artifacts
+cbs_sample.geojson
+test_cbs.py
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
