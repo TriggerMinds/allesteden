@@ -37,9 +37,12 @@ function determineSlug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
+function isValidCbsValue(value: number | undefined | null): value is number {
+  return value != null && value >= 0 && value < 99900;
+}
+
 function calculateDistanceScore(distance: number | undefined | null, multiplier: number = 2): number | null {
-  if (distance == null || distance < 0) return null;
-  // Simple mapping: 0 km = 10, X km = 0
+  if (distance == null || distance < 0 || distance >= 99900) return null;
   const score = Math.max(0, 10 - distance * multiplier);
   return Math.round(score * 10) / 10;
 }
@@ -67,57 +70,49 @@ async function upsertNeighborhood(
   const slug = `${determineSlug(name)}-${cityId}`;
   const geometryGeoJson = JSON.stringify(feature.geometry);
 
-  // Compute our 0-10 scores
-  const hospitalityScore = calculateDistanceScore(props.restaurant_gemiddelde_afstand_in_km, 2); // 5km = 0
-  const dailyShoppingScore = calculateDistanceScore(props.grote_supermarkt_gemiddelde_afstand_in_km, 3); // 3.3km = 0
-  
+  function cbsNum(v: unknown): number | undefined {
+    if (typeof v === "number" && isValidCbsValue(v)) return v;
+    return undefined;
+  }
+
+  const hospitalityScore = calculateDistanceScore(cbsNum(props.restaurant_gemiddelde_afstand_in_km), 2);
+  const dailyShoppingScore = calculateDistanceScore(cbsNum(props.grote_supermarkt_gemiddelde_afstand_in_km), 3);
+
   let accessibilityScore: number | null = null;
-  const trainDist = props.treinstation_gemiddelde_afstand_in_km;
-  const highwayDist = props.oprit_hoofdverkeersweg_gemiddelde_afstand_in_km;
-  if (trainDist != null && trainDist >= 0 && highwayDist != null && highwayDist >= 0) {
-    const avgDist = (trainDist + highwayDist) / 2;
-    accessibilityScore = calculateDistanceScore(avgDist, 1.5);
+  const trainDist = cbsNum(props.treinstation_gemiddelde_afstand_in_km);
+  const highwayDist = cbsNum(props.oprit_hoofdverkeersweg_gemiddelde_afstand_in_km);
+  if (trainDist != null && highwayDist != null) {
+    accessibilityScore = calculateDistanceScore((trainDist + highwayDist) / 2, 1.5);
   }
 
-  // Fallback leefbaarometer score from homeownership rate (always available in CBS data)
   let leefbaarometerScore: number | null = null;
-  if (props.percentage_koopwoningen != null) {
-    leefbaarometerScore = Math.round((props.percentage_koopwoningen / 10) * 10) / 10;
-  }
+  const koopPct = cbsNum(props.percentage_koopwoningen);
+  if (koopPct != null) leefbaarometerScore = Math.round(koopPct / 10 * 10) / 10;
 
-  // Green score: average of park + forest distance (inverted: closer = higher)
   let greenScore: number | null = null;
-  const parkDist = props.afstand_tot_park_of_plantsoen as number | undefined;
-  const forestDist = props.afstand_tot_bos as number | undefined;
-  if (parkDist != null || forestDist != null) {
-    const distances = [parkDist, forestDist].filter((d): d is number => d != null && d >= 0);
-    if (distances.length > 0) {
-      const avgDist = distances.reduce((a, b) => a + b, 0) / distances.length;
-      greenScore = Math.round(Math.max(0, 10 - avgDist * 2) * 10) / 10;
-    }
+  const parkDist = cbsNum(props.afstand_tot_park_of_plantsoen);
+  const forestDist = cbsNum(props.afstand_tot_bos);
+  const natureDist = cbsNum(props.afstand_tot_open_natuur_terrein_totaal);
+  const dists = [parkDist, forestDist, natureDist].filter((d): d is number => d != null);
+  if (dists.length > 0) {
+    greenScore = Math.round(Math.max(0, 10 - dists.reduce((a, b) => a + b, 0) / dists.length * 2) * 10) / 10;
   }
 
-  // Quiet score: from urban density (inverted: fewer addresses/km2 = quieter)
   let quietScore: number | null = null;
-  const density = props.stedelijkheid_adressen_per_km2 as number | undefined;
-  if (density != null) {
-    quietScore = Math.round(Math.max(0, 10 - density / 2500) * 10) / 10;
-  }
+  const density = cbsNum(props.stedelijkheid_adressen_per_km2);
+  if (density != null) quietScore = Math.round(Math.max(0, 10 - density / 2500) * 10) / 10;
 
-  // Safety proxy score: from income + employment + education
   let safetyScore: number | null = null;
-  const lowIncome = props.percentage_huishoudens_met_laag_inkomen as number | undefined;
-  const unemployed = props.percentage_werknemers_met_flexibele_arbeidsrelatie as number | undefined;
-  const highEdu = props.opleidingsniveau_hoog as number | undefined;
-  if (lowIncome != null || unemployed != null || highEdu != null) {
-    const riskFactors: number[] = [];
-    if (lowIncome != null) riskFactors.push(lowIncome);
-    if (unemployed != null) riskFactors.push(unemployed);
-    const avgRisk = riskFactors.length > 0
-      ? riskFactors.reduce((a, b) => a + b, 0) / riskFactors.length
-      : 50;
-    const eduBoost = highEdu != null ? highEdu / 5 : 0;
-    safetyScore = Math.round(Math.min(10, Math.max(0, 10 - avgRisk / 10 + eduBoost)) * 10) / 10;
+  const lowIncome = cbsNum(props.percentage_huishoudens_met_laag_inkomen);
+  const flexWork = cbsNum(props.percentage_werknemers_met_flexibele_arbeidsrelatie);
+  const highEdu = cbsNum(props.opleidingsniveau_hoog);
+  const highInc = cbsNum(props.percentage_personen_met_hoog_inkomen);
+  const risks = [lowIncome, flexWork].filter((r): r is number => r != null);
+  if (risks.length > 0) {
+    const avgRisk = risks.reduce((a, b) => a + b, 0) / risks.length;
+    const eduBoost = highEdu != null ? highEdu / 10 : 0;
+    const incBoost = highInc != null ? highInc / 10 : 0;
+    safetyScore = Math.round(Math.min(10, Math.max(0, 10 - avgRisk / 12 + eduBoost + incBoost)) * 10) / 10;
   }
 
   const demographicData = {

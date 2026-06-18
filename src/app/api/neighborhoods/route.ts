@@ -28,33 +28,35 @@ function computeCoreScore(n: {
   hospitality_score?: number | null;
   daily_shopping_score?: number | null;
 }): number {
-  const core = [
-    n.theft_safety_score,
-    n.social_safety_score,
-    n.green_score,
-    n.quiet_score,
-    n.safety_score,
-  ].filter((s): s is number => s !== null);
+  const dimensions: number[] = [];
 
-  if (core.length >= 3) {
-    const avg = core.reduce((a, b) => a + b, 0) / core.length;
-    return Math.round(avg * 10) / 10;
-  }
-  if (core.length >= 1) {
-    const avg = core.reduce((a, b) => a + b, 0) / core.length;
-    return Math.round(avg * 10) / 10;
+  // 1. Crime dimension (theft + social, equally weighted)
+  const crimeScores = [n.theft_safety_score, n.social_safety_score].filter((s): s is number => s !== null);
+  if (crimeScores.length >= 1) {
+    dimensions.push(crimeScores.reduce((a, b) => a + b, 0) / crimeScores.length);
   }
 
-  const cbsScores = [
-    n.leefbaarometer_score,
-    n.accessibility_score,
-    n.hospitality_score,
-    n.daily_shopping_score,
-  ].filter((s): s is number => s !== null);
+  // 2. Quiet dimension (urban density)
+  if (n.quiet_score != null) dimensions.push(n.quiet_score);
 
+  // 3. Safety proxy dimension (income/employment)
+  if (n.safety_score != null) dimensions.push(n.safety_score);
+
+  // 4. Leefbaarometer dimension (homeownership)
+  if (n.leefbaarometer_score != null) dimensions.push(n.leefbaarometer_score);
+
+  // 5. Green dimension (park/forest proximity)
+  if (n.green_score != null) dimensions.push(n.green_score);
+
+  // 6. CBS facilities dimension (accessibility, hospitality, daily shopping)
+  const cbsScores = [n.accessibility_score, n.hospitality_score, n.daily_shopping_score].filter((s): s is number => s !== null);
   if (cbsScores.length >= 1) {
-    const avg = cbsScores.reduce((a, b) => a + b, 0) / cbsScores.length;
-    return Math.round(avg * 10) / 10;
+    dimensions.push(cbsScores.reduce((a, b) => a + b, 0) / cbsScores.length);
+  }
+
+  if (dimensions.length >= 1) {
+    const avg = dimensions.reduce((a, b) => a + b, 0) / dimensions.length;
+    return Math.round(Math.min(9.5, avg) * 10) / 10;
   }
 
   return 5;
