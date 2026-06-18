@@ -5,14 +5,10 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 import type { NeighborhoodResponse, GeoJsonGeometry } from "@/lib/api/types";
 
-type SortKey = "name" | "safetyScore" | "theftSafetyScore" | "socialSafetyScore" | "greenScore" | "quietScore" | "weighted";
-
 interface CityMapProps {
   neighborhoods: NeighborhoodResponse[];
-  selectedMetric: SortKey;
   hoveredId: number | null;
   selectedId: number | null;
-  weightedScores: Record<number, number>;
   onHover: (id: number | null) => void;
   onSelect: (id: number | null) => void;
 }
@@ -28,58 +24,13 @@ const COLOR_STOPS = [
 function getScoreColor(score: number | null): string {
   if (score === null) return "#e4e4e7";
   if (score >= 8) return "#166534";
-  if (score >= 6) return "#22c55e";
-  if (score >= 4) return "#eab308";
-  if (score >= 2) return "#f97316";
+  if (score >= 7) return "#22c55e";
+  if (score >= 6) return "#eab308";
+  if (score >= 4) return "#f97316";
   return "#dc2626";
 }
 
-function metricLabel(key: SortKey): string {
-  const map: Record<string, string> = {
-    theftSafetyScore: "Woninginbraken",
-    socialSafetyScore: "Sociale veiligheid",
-    greenScore: "Groen",
-    quietScore: "Rust",
-    safetyScore: "Veiligheid",
-    weighted: "Totaal (Gewogen)",
-    name: "Naam",
-  };
-  return map[key] ?? key;
-}
-
-function formatScore(v: number | null): string {
-  if (v === null) return "—";
-  return v.toFixed(1);
-}
-
-function popupHtml(props: Record<string, unknown>): string {
-  const name = (props.name as string) ?? "Onbekend";
-  const theft = props.theftSafetyScore as number | null;
-  const social = props.socialSafetyScore as number | null;
-  const green = props.greenScore as number | null;
-  const quiet = props.quietScore as number | null;
-
-  const row = (icon: string, label: string, val: number | null) =>
-    `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;font-family:system-ui,sans-serif">
-      <span style="width:18px;text-align:center">${icon}</span>
-      <span style="flex:1;color:#71717a">${label}</span>
-      <span style="font-weight:600;color:#18181b">${formatScore(val)}</span>
-    </div>`;
-
-  return `
-    <div style="min-width:200px">
-      <div style="font-weight:700;font-size:15px;font-family:system-ui,sans-serif;color:#18181b;padding:0 0 6px 0;border-bottom:1px solid #e4e4e7;margin-bottom:6px">${name}</div>
-      ${row("🛡️", "Woninginbraken", theft)}
-      ${row("👥", "Sociale veiligheid", social)}
-      ${row("🌿", "Groen", green)}
-      ${row("🤫", "Rust", quiet)}
-    </div>`;
-}
-
-function buildFeatureCollection(
-  neighborhoods: NeighborhoodResponse[],
-  weightedScores: Record<number, number>,
-) {
+function buildFeatureCollection(neighborhoods: NeighborhoodResponse[]) {
   return {
     type: "FeatureCollection" as const,
     features: neighborhoods
@@ -88,20 +39,15 @@ function buildFeatureCollection(
         type: "Feature" as const,
         properties: {
           id: n.id,
-          name: n.name,
-          safetyScore: n.safetyScore,
-          theftSafetyScore: n.theftSafetyScore,
-          socialSafetyScore: n.socialSafetyScore,
-          greenScore: n.greenScore,
-          quietScore: n.quietScore,
-          weightedScore: weightedScores[n.id] ?? null,
+          name: n.buurtnaam,
+          score: n.score,
         },
         geometry: n.geometry as GeoJsonGeometry,
       })),
   };
 }
 
-function LegendControl({ selectedMetric }: { selectedMetric: SortKey }) {
+function LegendControl() {
   const map = useMap();
   const ctrlRef = useRef<L.Control | null>(null);
 
@@ -118,7 +64,7 @@ function LegendControl({ selectedMetric }: { selectedMetric: SortKey }) {
 
         const title = document.createElement("div");
         title.style.cssText = "font-weight:700;font-size:13px;color:#18181b;margin-bottom:8px";
-        title.textContent = `Score: ${metricLabel(selectedMetric)}`;
+        title.textContent = "Score";
         div.appendChild(title);
 
         for (const stop of COLOR_STOPS) {
@@ -149,7 +95,7 @@ function LegendControl({ selectedMetric }: { selectedMetric: SortKey }) {
       legend.remove();
       ctrlRef.current = null;
     };
-  }, [map, selectedMetric]);
+  }, [map]);
 
   return null;
 }
@@ -196,27 +142,21 @@ function MapController({
 
 export default function CityMap({
   neighborhoods,
-  selectedMetric,
   hoveredId,
   selectedId,
-  weightedScores,
   onHover,
   onSelect,
 }: CityMapProps) {
   const geoJsonData = useMemo(
-    () => buildFeatureCollection(neighborhoods, weightedScores),
-    [neighborhoods, weightedScores],
+    () => buildFeatureCollection(neighborhoods),
+    [neighborhoods],
   );
 
   const getStyle = useCallback(
     (feature: unknown): L.PathOptions => {
       const props = (feature as Record<string, unknown>)?.properties as Record<string, unknown> | undefined;
       const id = (props?.id as number) ?? -1;
-      const rawScore =
-        selectedMetric === "weighted"
-          ? (props?.weightedScore as number | null)
-          : (props?.[selectedMetric] as number | null);
-      const score = rawScore ?? null;
+      const score = (props?.score as number | null) ?? null;
 
       const isSelected = id === selectedId;
       const isHovered = id === hoveredId;
@@ -248,7 +188,7 @@ export default function CityMap({
       }
       return base;
     },
-    [selectedMetric, hoveredId, selectedId],
+    [hoveredId, selectedId],
   );
 
   const onEachFeature = useCallback(
@@ -257,18 +197,21 @@ export default function CityMap({
       const id = (props?.id as number) ?? -1;
 
       const l = layer as L.GeoJSON;
-
       l.bindTooltip((props?.name as string) ?? "Onbekend", {
         direction: "top",
         offset: L.point(0, -8),
         className: "rounded-lg shadow-lg border border-zinc-200 bg-white/95 text-sm font-medium text-zinc-800 px-3 py-1.5",
       });
 
-      l.bindPopup(popupHtml(props ?? {}), {
-        maxWidth: 260,
-        className: "custom-neighborhood-popup",
-        closeButton: true,
-      });
+      const score = (props?.score as number | null) ?? null;
+      l.bindPopup(
+        `<div style="font-weight:700;font-size:15px;font-family:system-ui,sans-serif;color:#18181b;text-align:center">${props?.name ?? "Onbekend"}<br/><span style="font-size:24px;color:#059669">${score !== null ? score.toFixed(1) : "—"}</span></div>`,
+        {
+          maxWidth: 200,
+          className: "custom-neighborhood-popup",
+          closeButton: true,
+        },
+      );
 
       l.on({
         mouseover: () => onHover(id),
@@ -294,7 +237,6 @@ export default function CityMap({
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
       <GeoJSON
-        key={`${selectedMetric}-${JSON.stringify(weightedScores)}`}
         data={geoJsonData}
         style={getStyle}
         onEachFeature={onEachFeature}
@@ -304,7 +246,7 @@ export default function CityMap({
         selectedId={selectedId}
         neighborhoods={neighborhoods}
       />
-      <LegendControl selectedMetric={selectedMetric} />
+      <LegendControl />
     </MapContainer>
   );
 }

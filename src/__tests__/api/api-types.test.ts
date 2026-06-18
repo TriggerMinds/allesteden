@@ -24,45 +24,44 @@ describe("API Types — structural validation", () => {
         {
           id: 1,
           cityId: 1,
-          name: "Centrum",
-          slug: "centrum",
-          safetyScore: 7.5,
-          theftSafetyScore: 7.0,
-          socialSafetyScore: 7.8,
-          greenScore: 6.0,
-          quietScore: 4.2,
+          rank: 1,
+          wijknaam: "Centrum",
+          buurtnaam: "Centrum",
+          score: 7.5,
+          population: 90000,
+          category: "Hoogste",
           geometry,
           details: { aantalinwoners: 90000 },
         },
       ],
     };
-    expect(response.neighborhoods[0].geometry?.type).toBe("MultiPolygon");
-    expect(Array.isArray(response.neighborhoods[0].geometry?.coordinates)).toBe(true);
+    expect(response.neighborhoods[0].buurtnaam).toBe("Centrum");
+    expect(response.neighborhoods[0].rank).toBe(1);
+    expect(response.neighborhoods[0].score).toBe(7.5);
   });
 
-  it("supports null scores", () => {
+  it("supports null scores and null geometry", () => {
     const response: NeighborhoodsApiResponse = {
       city: { id: 1, name: "Test", slug: "test" },
       neighborhoods: [
         {
           id: 1,
           cityId: 1,
-          name: "Test",
-          slug: "test",
-          safetyScore: null,
-          theftSafetyScore: null,
-          socialSafetyScore: null,
-          greenScore: null,
-          quietScore: null,
+          rank: 1,
+          wijknaam: "Test",
+          buurtnaam: "Test",
+          score: null,
+          population: null,
+          category: null,
           geometry: null,
           details: null,
         },
       ],
     };
     response.neighborhoods.forEach((n) => {
-      expect(n.safetyScore).toBeNull();
-      expect(n.greenScore).toBeNull();
-      expect(n.quietScore).toBeNull();
+      expect(n.score).toBeNull();
+      expect(n.population).toBeNull();
+      expect(n.category).toBeNull();
       expect(n.geometry).toBeNull();
     });
   });

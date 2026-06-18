@@ -17,6 +17,36 @@ function parseGeometry(raw: unknown): GeoJsonGeometry | null {
   return null;
 }
 
+function computeCoreScore(n: {
+  theft_safety_score?: number | null;
+  social_safety_score?: number | null;
+  green_score?: number | null;
+  quiet_score?: number | null;
+  safety_score?: number | null;
+}): number {
+  const core = [
+    n.theft_safety_score,
+    n.social_safety_score,
+    n.green_score,
+    n.quiet_score,
+  ].filter((s): s is number => s !== null);
+
+  if (core.length >= 2) {
+    const avg = core.reduce((a, b) => a + b, 0) / core.length;
+    return Math.round(avg * 10) / 10;
+  }
+  return n.safety_score ?? 5;
+}
+
+function computeCategory(score: number | null): string {
+  if (score === null) return "Onbekend";
+  if (score >= 8) return "Hoogste";
+  if (score >= 7) return "Zeer hoog";
+  if (score >= 6) return "Boven gemiddeld";
+  if (score >= 4) return "Onder gemiddeld";
+  return "Laagste";
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const rl = await checkRateLimit(rateLimitIdentifier(request));
   if (!rl.allowed) {
@@ -62,7 +92,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const neighborhoods = await prisma.$queryRawUnsafe<
+  const rows = await prisma.$queryRawUnsafe<
     {
       id: number;
       city_id: number;
@@ -74,7 +104,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       green_score: number | null;
       quiet_score: number | null;
       geometry: unknown;
-      details_json: unknown;
+      details_json: Record<string, unknown> | null;
     }[]
   >(
     `SELECT
@@ -89,21 +119,46 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     city.id,
   );
 
+  const withScore = rows.map((row) => ({
+    id: row.id,
+    cityId: row.city_id,
+    buurtnaam: row.name,
+    slug: row.slug,
+    theftSafetyScore: row.theft_safety_score,
+    socialSafetyScore: row.social_safety_score,
+    greenScore: row.green_score,
+    quietScore: row.quiet_score,
+    safetyScore: row.safety_score,
+    details: row.details_json,
+    geometry: parseGeometry(row.geometry),
+    wijknaam:
+      (row.details_json?.wijknaam as string | undefined) ??
+      row.name,
+    population:
+      (row.details_json?.aantalinwoners as number | undefined) ??
+      (row.details_json?.population as number | undefined) ??
+      null,
+    score: computeCoreScore(row),
+  }));
+
+  withScore.sort((a, b) => b.score - a.score);
+
+  const neighborhoods = withScore.map((n, i) => ({
+    id: n.id,
+    cityId: n.cityId,
+    rank: i + 1,
+    wijknaam: n.wijknaam,
+    buurtnaam: n.buurtnaam,
+    score: n.score,
+    population: n.population,
+    category: computeCategory(n.score),
+    geometry: n.geometry,
+    details: n.details,
+  }));
+
   const response: NeighborhoodsApiResponse = {
     city: { id: city.id, name: city.name, slug: city.slug },
-    neighborhoods: neighborhoods.map((n) => ({
-      id: n.id,
-      cityId: n.city_id,
-      name: n.name,
-      slug: n.slug,
-      safetyScore: n.safety_score,
-      theftSafetyScore: n.theft_safety_score,
-      socialSafetyScore: n.social_safety_score,
-      greenScore: n.green_score,
-      quietScore: n.quiet_score,
-      geometry: parseGeometry(n.geometry),
-      details: n.details_json as Record<string, unknown> | null,
-    })),
+    neighborhoods,
   };
 
   await setCache(cacheKeyStr, response);

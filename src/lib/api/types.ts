@@ -13,13 +13,12 @@ export interface CityResponse {
 export interface NeighborhoodResponse {
   id: number;
   cityId: number;
-  name: string;
-  slug: string;
-  safetyScore: number | null;
-  theftSafetyScore: number | null;
-  socialSafetyScore: number | null;
-  greenScore: number | null;
-  quietScore: number | null;
+  rank: number;
+  wijknaam: string;
+  buurtnaam: string;
+  score: number | null;
+  population: number | null;
+  category: string | null;
   geometry: GeoJsonGeometry | null;
   details: Record<string, unknown> | null;
 }

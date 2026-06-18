@@ -1,100 +1,64 @@
-# Walkthrough — theftSafetyScore & socialSafetyScore Integration
+# Walkthrough — Allewijken Parity (Ranking & UI Redesign)
 
-## Overview
+## Summary
 
-The backend agent has added two new columns to the `neighborhoods` table:
+Complete UI and API overhaul to match `allewijken.nl/amsterdam`. The city page is now a **ranking list** with a full-screen map background, no weight sliders, no demo data, and Dutch number formatting.
 
-- `theft_safety_score` (0–10) — Score based on burglary/theft crime data (CBS 47018NED)
-- `social_safety_score` (0–10) — Score based on social safety (vandalism, nuisance)
+## Changes
 
-This walkthrough describes all frontend changes made to support these new data points.
+### 1. Data Contract (`src/lib/api/types.ts`)
 
-## Changes Made
+`NeighborhoodResponse` replaced with new fields:
 
-### 1. API Route (`src/app/api/neighborhoods/route.ts`)
-
-- Added `theft_safety_score` and `social_safety_score` to the `$queryRawUnsafe` SELECT statement
-- Added both fields to the type annotation of the raw query result
-- Mapped `theft_safety_score` → `theftSafetyScore` and `social_safety_score` → `socialSafetyScore` in the API response (snake_case DB → camelCase TypeScript)
-
-### 2. TypeScript Types (`src/lib/api/types.ts`)
-
-Added two new required fields to `NeighborhoodResponse`:
-
-```ts
-theftSafetyScore: number | null;
-socialSafetyScore: number | null;
-```
-
-### 3. Prisma Schema (`prisma/schema.prisma`)
-
-The schema was already updated by the backend agent:
-
-```prisma
-socialSafetyScore     Float?   @map("social_safety_score")
-theftSafetyScore      Float?   @map("theft_safety_score")
-```
-
-### 4. Map Coloring (`src/components/city-map.tsx`)
-
-- Extended `SortKey` type: added `"theftSafetyScore"` and `"socialSafetyScore"`
-- `buildFeatureCollection` now includes both scores in each feature's properties
-- Map polygons can be colored by theft or social safety when selected in the sort pills
-
-### 5. City Dashboard (`src/app/[city-slug]/city-content.tsx`)
-
-**Card badges** — replaced the single `Star + safetyScore` with two detailed badges:
-
-| Icon | Label | Field | Color |
-|---|---|---|---|
-| Shield | Woninginbraken | `theftSafetyScore` | Red |
-| Users (orange) | Sociale veiligheid | `socialSafetyScore` | Orange |
-| TreeDeciduous | Groen | `greenScore` | Emerald |
-| Ear | Rust | `quietScore` | Sky |
-
-**Sort pills** — new filter options in the floating panel:
-
-| Pill | Sorts by | Map color |
+| Field | Type | Source |
 |---|---|---|
-| Totaal | Weighted score | Weighted |
-| Inbraken | `theftSafetyScore` | Theft |
-| Sociaal | `socialSafetyScore` | Social |
-| Groen | `greenScore` | Green |
-| Rust | `quietScore` | Quiet |
-| Naam | Alphabetical | Current metric |
+| `rank` | number | Computed from score DESC ordering |
+| `wijknaam` | string | Parent neighborhood name from `details_json` |
+| `buurtnaam` | string | The neighborhood name (formerly `name`) |
+| `score` | number \| null | Average of 4 core metrics |
+| `population` | number \| null | From `details_json.aantalinwoners` |
+| `category` | string \| null | Score-based: Hoogste/Zeer hoog/Boven gemiddeld/Onder gemiddeld/Laagste |
 
-**Weight sliders** — the preferences panel now has 4 sliders instead of 3:
+### 2. API Route (`src/app/api/neighborhoods/route.ts`)
 
-| Slider | Icon | Default % |
-|---|---|---|
-| Woninginbraken | Shield | 25% |
-| Sociale veiligheid | Users | 25% |
-| Groen | TreeDeciduous | 25% |
-| Rust | Ear | 25% |
+- `computeCoreScore()`: averages `theft_safety_score`, `social_safety_score`, `green_score`, `quiet_score`. Falls back to `safety_score`, then 5.
+- `computeCategory()`: thresholds: ≥8=Hoogste, ≥7=Zeer hoog, ≥6=Boven gemiddeld, ≥4=Onder gemiddeld, <4=Laagste.
+- Data pipeline: raw SQL → score computation → sort DESC → assign rank → add category → return.
 
-Weighted score formula:
+### 3. Number Formatting (`src/lib/utils.ts`)
 
-```
-(theftSafetyScore × 0.25) + (socialSafetyScore × 0.25) + (greenScore × 0.25) + (quietScore × 0.25)
-```
+- `formatScore()`: `Intl.NumberFormat("nl-NL")` with 1 decimal — outputs `8,3` instead of `8.3`
+- `formatPopulation()`: `Intl.NumberFormat("nl-NL")` — outputs `95.000` instead of `95k`
 
-**Detail panel** — when clicking a neighborhood, the detail view now shows two rows:
-1. Top row: Woninginbraken (red), Sociale veiligheid (orange), Groen (green), Rust (sky)
-2. Bottom row: Inwoners (violet), Inkomen (zinc) — if available
+### 4. UI Redesign (`city-content.tsx`)
 
-### 6. Demo Data (`src/app/[city-slug]/page.tsx`)
+| Before | After |
+|---|---|
+| `{cityName}` heading | `Alle wijken in {cityName}` |
+| Weight sliders, sort pills, search | **Removed entirely** |
+| Medals for top 3 (`<Medal/>`) | Simple `#1`, `#2`, `#3` for all |
+| Cards with icons/scores/population/income | Clean ranking rows: `#rank`, buurtnaam/wijknaam, score, category badge |
+| 20 hardcoded demo neighborhoods | **Empty state** with "Data laden..." when no DB data |
+| `details` with fallback extraction | Population directly from API `population` field |
+| Complex weighted score calculation | Single `score` from API |
 
-All 7 demo neighborhoods now include realistic `theftSafetyScore` and `socialSafetyScore` values.
+### 5. Page Component (`page.tsx`)
 
-### 7. Tests (`src/__tests__/api/api-types.test.ts`)
+- Removed `DEMO_NEIGHBORHOODS` constant entirely
+- Removed `DEMO_GEOMETRIES` import and `demo-geometry.ts` file
+- When API returns null, passes empty array → city-content shows empty state
 
-Updated API type tests to include the two new fields in mock objects.
+### 6. Map Component (`city-map.tsx`)
 
-### 8. ESLint Cleanup
+- Simplified: only colors by `score` — no metric selection
+- Removed `SortKey`, `weightedScores`, `selectedMetric` props
+- `buildFeatureCollection` uses `score` directly from API response
+- Legend shows static "Score" title
+- Popup shows neighborhood name + score value
 
-Fixed two pre-existing warnings in worker files:
-- `cbs-worker.ts`: removed unused `prisma` destructure; replaced `any` with specific type
-- `police-worker.ts`: replaced `any` with `Record<string, unknown>`
+### 7. Tests (`api-types.test.ts`)
+
+Updated to test new `NeighborhoodResponse` shape with `rank`, `wijknaam`, `buurtnaam`, `score`, `population`, `category`.
 
 ## Verification
 
@@ -102,13 +66,5 @@ Fixed two pre-existing warnings in worker files:
 npm run typecheck   # 0 errors
 npm run lint        # 0 errors, 0 warnings
 npm test            # 21/21 passed
-npm run dev         # 0 console errors on / and /amsterdam
+npm run dev         # 0 console errors
 ```
-
-## Screenshots
-
-The city dashboard at `/[city-slug]` now shows:
-- Card badges: Shield (theft) + Users (social) + Tree (green) + Ear (quiet)
-- Sort pills including "Inbraken" and "Sociaal"
-- Weights panel with 4 sliders
-- Detail view with 6 metric cards
