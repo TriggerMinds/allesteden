@@ -5,6 +5,14 @@ interface CityPageProps {
   params: Promise<{ "city-slug": string }>;
 }
 
+function formatCitySlug(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 async function getCityData(slug: string): Promise<NeighborhoodsApiResponse | null> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
   try {
@@ -25,9 +33,7 @@ export default async function CityPage({ params }: CityPageProps) {
   const data = await getCityData(slug);
 
   const neighborhoods = data?.neighborhoods ?? [];
-  const cityName = data?.city?.name ?? slug;
+  const cityName = data?.city?.name ?? formatCitySlug(slug);
 
-  return (
-    <CityContent neighborhoods={neighborhoods} cityName={cityName} />
-  );
+  return <CityContent neighborhoods={neighborhoods} cityName={cityName} />;
 }
