@@ -9,7 +9,11 @@ import type { NeighborhoodResponse } from "@/lib/api/types";
 
 const CityMap = dynamic(() => import("@/components/city-map"), {
   ssr: false,
-  loading: () => <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-zinc-400 text-sm">Kaart laden...</div>,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-zinc-400 text-sm">
+      Kaart laden...
+    </div>
+  ),
 });
 
 interface CityContentProps {
@@ -28,11 +32,11 @@ function scoreColorClass(score: number | null): string {
 
 function categoryBadge(category: string | null): string {
   const map: Record<string, string> = {
-    "Hoogste": "bg-emerald-100 text-emerald-800",
+    Hoogste: "bg-emerald-100 text-emerald-800",
     "Zeer hoog": "bg-emerald-50 text-emerald-700",
     "Boven gemiddeld": "bg-amber-50 text-amber-700",
     "Onder gemiddeld": "bg-orange-50 text-orange-700",
-    "Laagste": "bg-red-50 text-red-700",
+    Laagste: "bg-red-50 text-red-700",
   };
   return map[category ?? ""] ?? "bg-zinc-100 text-zinc-600";
 }
@@ -42,32 +46,22 @@ export default function CityContent({
   cityName,
 }: CityContentProps) {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
-  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<number | null>(null);
+  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<
+    number | null
+  >(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (selectedNeighborhoodId === null) return;
-    const el = listRef.current?.querySelector(`[data-id="${selectedNeighborhoodId}"]`);
+    const el = listRef.current?.querySelector(
+      `[data-id="${selectedNeighborhoodId}"]`,
+    );
     el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [selectedNeighborhoodId]);
 
   const selectedNeighborhood = selectedNeighborhoodId
     ? neighborhoods.find((n) => n.id === selectedNeighborhoodId) ?? null
     : null;
-
-  if (neighborhoods.length === 0) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-zinc-50">
-        <div className="text-center space-y-3">
-          <MapPin className="size-10 text-zinc-300 mx-auto" />
-          <p className="text-zinc-500 text-sm font-medium">Data laden...</p>
-          <Link href="/" className="text-xs text-emerald-600 hover:underline block">
-            Terug naar overzicht
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-zinc-100">
@@ -94,10 +88,17 @@ export default function CityContent({
                 Terug naar overzicht
               </button>
 
-              <p className="mt-2 text-xs text-zinc-400">#{selectedNeighborhood.rank}</p>
+              <p className="mt-2 text-xs text-zinc-400">
+                #{selectedNeighborhood.rank}
+              </p>
               <h2 className="text-xl font-bold text-zinc-900">
                 {selectedNeighborhood.buurtnaam}
               </h2>
+              {selectedNeighborhood.wijknaam !== selectedNeighborhood.buurtnaam && (
+                <p className="mt-1 text-sm text-zinc-400">
+                  {selectedNeighborhood.wijknaam}
+                </p>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
@@ -123,12 +124,17 @@ export default function CityContent({
               {selectedNeighborhood.details && (
                 <div className="space-y-2 text-sm text-zinc-500">
                   {Object.entries(selectedNeighborhood.details)
-                    .filter(([k]) => k !== "aantalinwoners" && k !== "population" && k !== "wijknaam")
+                    .filter(
+                      ([k]) =>
+                        k !== "aantalinwoners" &&
+                        k !== "population" &&
+                        k !== "wijknaam",
+                    )
                     .slice(0, 8)
                     .map(([key, val]) => (
-                      <div key={key} className="flex justify-between">
-                        <span>{key}</span>
-                        <span className="font-medium text-zinc-700">
+                      <div key={key} className="flex justify-between gap-4">
+                        <span className="truncate">{key}</span>
+                        <span className="font-medium text-zinc-700 text-right">
                           {typeof val === "number" ? formatPopulation(val) : String(val)}
                         </span>
                       </div>
@@ -157,51 +163,69 @@ export default function CityContent({
             </div>
 
             <div ref={listRef} className="flex-1 overflow-y-auto">
-              {neighborhoods.map((n) => (
-                <button
-                  key={n.id}
-                  data-id={n.id}
-                  type="button"
-                  onMouseEnter={() => setHoveredId(n.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  onClick={() => setSelectedNeighborhoodId(n.id)}
-                  className={`w-full text-left px-4 py-3 transition-colors border-b border-zinc-50 cursor-pointer ${
-                    hoveredId === n.id ? "bg-emerald-50" : "hover:bg-zinc-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="shrink-0 w-8 text-sm font-bold text-zinc-300 text-right">
-                      #{n.rank}
-                    </span>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-zinc-900 truncate">
-                        {n.buurtnaam}
-                      </p>
-                      {n.wijknaam !== n.buurtnaam && (
-                        <p className="text-xs text-zinc-400 truncate">
-                          {n.wijknaam}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="shrink-0 text-right">
-                      <p className={`text-sm font-bold ${scoreColorClass(n.score)}`}>
-                        {formatScore(n.score)}
-                      </p>
-                      {n.category && (
-                        <span className={`inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${categoryBadge(n.category)}`}>
-                          {n.category}
-                        </span>
-                      )}
-                    </div>
+              {neighborhoods.length === 0 ? (
+                <div className="flex h-full items-center justify-center px-6 text-center">
+                  <div className="space-y-3">
+                    <MapPin className="size-10 text-zinc-300 mx-auto" />
+                    <p className="text-zinc-500 text-sm font-medium">
+                      Data laden...
+                    </p>
+                    <p className="text-xs text-zinc-400">
+                      Er zijn nog geen buurtrecords voor deze stad beschikbaar.
+                    </p>
                   </div>
-                </button>
-              ))}
+                </div>
+              ) : (
+                neighborhoods.map((n) => (
+                  <button
+                    key={n.id}
+                    data-id={n.id}
+                    type="button"
+                    onMouseEnter={() => setHoveredId(n.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    onClick={() => setSelectedNeighborhoodId(n.id)}
+                    className={`w-full text-left px-4 py-3 transition-colors border-b border-zinc-50 cursor-pointer ${
+                      hoveredId === n.id ? "bg-emerald-50" : "hover:bg-zinc-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="shrink-0 w-8 text-sm font-bold text-zinc-300 text-right">
+                        #{n.rank}
+                      </span>
+
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-zinc-900 truncate">
+                          {n.buurtnaam}
+                        </p>
+                        {n.wijknaam !== n.buurtnaam && (
+                          <p className="text-xs text-zinc-400 truncate">
+                            {n.wijknaam}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <p className={`text-sm font-bold ${scoreColorClass(n.score)}`}>
+                          {formatScore(n.score)}
+                        </p>
+                        {n.category && (
+                          <span
+                            className={`inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${categoryBadge(
+                              n.category,
+                            )}`}
+                          >
+                            {n.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
 
             <div className="shrink-0 border-t border-zinc-100 p-3 text-center text-xs text-zinc-400 space-y-1">
-              <p>Kaart door OpenStreetMap / CARTO</p>
+              <p>Kaart laden...</p>
               <a
                 href="https://github.com/TriggerMinds/allesteden/issues"
                 target="_blank"
