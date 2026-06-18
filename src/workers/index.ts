@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createCbsWorker } from "./cbs-worker";
 import { createPoliceWorker } from "./police-worker";
 import { createLeefbaarometerWorker } from "./leefbaarometer-worker";

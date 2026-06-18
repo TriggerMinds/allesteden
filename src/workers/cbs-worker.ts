@@ -3,7 +3,7 @@ import { getBullConnection } from "../lib/queue/connection";
 import { QUEUES, type CbsDataJobData } from "../lib/queue/constants";
 import { createJobLogger } from "./logger";
 
-const OGC_API_BASE = "https://api.pdok.nl/cbs/wijken-en-buurten-2023/ogc/v1/collections/buurten/items";
+const CBS_OGC_URL = "https://api.pdok.nl/cbs/wijken-en-buurten-2023/ogc/v1/collections/buurten/items";
 
 interface CbsFeature {
   type: "Feature";
@@ -127,48 +127,35 @@ export async function processCbsData(job: Job<CbsDataJobData>): Promise<{ import
   const log = createJobLogger(job.id ?? undefined, QUEUES.CBS_DATA);
   const targetCity = job.data.url; // Use url field as city filter if provided for local testing
 
-  log.info({ targetCity }, "Starting CBS geometry import from OGC API");
+  log.info({ url: CBS_OGC_URL }, "Starting CBS geometry import");
 
-  let offset = 0;
-  const limit = 1000;
-  let hasMore = true;
+  const res = await fetch(CBS_OGC_URL, {
+    headers: { Accept: "application/geo+json" },
+  });
+  if (!res.ok) {
+    log.error({ status: res.status }, "CBS OGC API failed");
+    return { imported: 0, cities: new Set<string>() };
+  }
+
+  const data: { type: string; features: CbsFeature[] } = await res.json();
+  const features = data.features;
   let imported = 0;
   const cities = new Set<string>();
 
-  while (hasMore) {
-    const url = `${OGC_API_BASE}?limit=${limit}&offset=${offset}`;
-    log.info({ offset }, "Fetching CBS OGC batch");
-    
-    const res = await fetch(url);
-    if (!res.ok) {
-      log.error({ status: res.status }, "CBS API failed");
-      break;
-    }
-    
-    const data = await res.json();
-    const features: CbsFeature[] = data.features;
-    
-    if (!features || features.length === 0) {
-      hasMore = false;
-      break;
+  log.info({ featureCount: features.length }, "Received CBS features");
+
+  for (const feature of features) {
+    const cityName = feature.properties.gemeentenaam;
+    if (!cityName) continue;
+
+    if (targetCity && cityName.toLowerCase() !== targetCity.toLowerCase()) {
+      continue;
     }
 
-    for (const feature of features) {
-      const cityName = feature.properties.gemeentenaam;
-      if (!cityName) continue;
-      
-      // If a specific city is requested (for speed during local testing), skip others
-      if (targetCity && cityName.toLowerCase() !== targetCity.toLowerCase()) {
-        continue;
-      }
-      
-      cities.add(cityName);
-      const city = await upsertCity(cityName);
-      await upsertNeighborhood(city.id, feature, log);
-      imported++;
-    }
-    
-    offset += limit;
+    cities.add(cityName);
+    const city = await upsertCity(cityName);
+    await upsertNeighborhood(city.id, feature, log);
+    imported++;
   }
 
   log.info({ totalImported: imported, totalCities: cities.size }, "CBS import completed");
